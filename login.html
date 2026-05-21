@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - WB Police Mock Test</title>
+    <style>
+        body { font-family: sans-serif; background-color: #121212; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .login-card { background: #1e1e1e; padding: 30px; border-radius: 10px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 100%; max-width: 350px; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 5px; color: #aaa; font-size: 14px; }
+        .input-group input { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #333; background: #2a2a2a; color: white; box-sizing: border-box; }
+        .btn-submit { background: #2ecc71; color: white; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-submit:hover { background: #27ae60; }
+        .toggle-text { margin-top: 15px; color: #4a90e2; cursor: pointer; font-size: 14px; }
+        .toggle-text:hover { text-decoration: underline; }
+        .or-divider { margin: 20px 0; color: #666; font-size: 14px; }
+        .btn-google { background: #fff; color: #333; border: none; padding: 10px; font-size: 14px; font-weight: bold; border-radius: 5px; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-google:hover { background: #e6e6e6; }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <h2 id="card-title">লগইন করুন</h2>
+        
+        <div class="input-group" id="name-group" style="display: none;">
+            <label for="username">আপনার নাম</label>
+            <input type="text" id="username" placeholder="পুরো নাম লিখুন">
+        </div>
+
+        <div class="input-group" id="phone-group" style="display: none;">
+            <label for="phone">মোবাইল নাম্বার</label>
+            <input type="tel" id="phone" placeholder="১০ ডিজিটের মোবাইল নম্বর">
+        </div>
+
+        <div class="input-group">
+            <label for="email">ইমেল আইডি</label>
+            <input type="email" id="email" placeholder="example@email.com">
+        </div>
+        
+        <div class="input-group">
+            <label for="password">পাসওয়ার্ড</label>
+            <input type="password" id="password" placeholder="******">
+        </div>
+
+        <button class="btn-submit" id="btn-action">লগইন করুন</button>
+        
+        <div class="toggle-text" id="btn-toggle">নতুন অ্যাকাউন্ট তৈরি করুন</div>
+
+        <div class="or-divider">অথবা</div>
+
+        <button class="btn-google" id="btn-google">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" width="18">
+            Google দিয়ে লগইন করুন
+        </button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        // 1. ফায়ারস্টোর ডাটাবেস ইম্পোর্ট করা হলো
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"; 
+
+        // ⚠️ আপনার আসল Firebase Configuration এখানে বসাবেন
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCoBw6-MTBXtIJPEvP9qB7I3JFpJ7MZM5I",
+  authDomain: "mocktest0.firebaseapp.com",
+  projectId: "mocktest0",
+  storageBucket: "mocktest0.firebasestorage.app",
+  messagingSenderId: "251833325363",
+  appId: "1:251833325363:web:8bdd09a4b717bf045e9046",
+  measurementId: "G-6P2P3WS42H"
+};
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app); // 2. ডাটাবেস কানেক্ট করা হলো
+        const googleProvider = new GoogleAuthProvider();
+
+        let isLoginMode = true;
+        const cardTitle = document.getElementById('card-title');
+        const btnAction = document.getElementById('btn-action');
+        const btnToggle = document.getElementById('btn-toggle');
+        
+        const nameGroup = document.getElementById('name-group');
+        const phoneGroup = document.getElementById('phone-group');
+
+        // লগইন এবং রেজিস্ট্রেশন মোড টগল লজিক
+        btnToggle.addEventListener('click', () => {
+            isLoginMode = !isLoginMode;
+            if (isLoginMode) {
+                cardTitle.innerText = "লগইন করুন";
+                nameGroup.style.display = 'none';
+                phoneGroup.style.display = 'none';
+                btnAction.innerText = "লগইন করুন";
+                btnToggle.innerText = "নতুন অ্যাকাউন্ট তৈরি করুন";
+            } else {
+                cardTitle.innerText = "রেজিস্ট্রেশন করুন";
+                nameGroup.style.display = 'block';
+                phoneGroup.style.display = 'block';
+                btnAction.innerText = "রেজিস্টার করুন";
+                btnToggle.innerText = "অলরেডি অ্যাকাউন্ট আছে? লগইন করুন";
+            }
+        });
+
+        // অ্যাকশন বাটন ক্লিক (লগইন বা রেজিস্টার)
+        btnAction.addEventListener('click', () => {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const username = document.getElementById('username').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+
+            if (!email || !password) {
+                alert("দয়া করে ইমেল এবং পাসওয়ার্ড দুটিই লিখুন!");
+                return;
+            }
+
+            if (isLoginMode) {
+                // ইমেল ও পাসওয়ার্ড দিয়ে লগইন
+                signInWithEmailAndPassword(auth, email, password)
+                    .then(() => { window.location.href = "dashboard.html"; })
+                    .catch((error) => { alert("লগইন হয়নি: " + error.message); });
+            } else {
+                // নতুন অ্যাকাউন্ট তৈরি ও ডাটা সেভ
+                if (!username || !phone) {
+                    alert("দয়া করে আপনার নাম এবং মোবাইল নাম্বার লিখুন!");
+                    return;
+                }
+
+                createUserWithEmailAndPassword(auth, email, password)
+                    .then((userCredential) => {
+                        const user = userCredential.user;
+                        
+                        // 3. ইউজারের নাম, ফোন ও ইমেল Firestore-এ 'users' কালেকশনে সেভ করা
+                        setDoc(doc(db, "users", user.uid), {
+                            uid: user.uid,
+                            name: username,
+                            mobile: phone,
+                            email: email,
+                            createdAt: new Date()
+                        })
+                        .then(() => {
+                            alert("অ্যাকাউন্ট তৈরি এবং তথ্য সেভ সফল হয়েছে!");
+                            window.location.href = "dashboard.html";
+                        })
+                        .catch((dbError) => {
+                            console.error("ডাটাবেসে সেভ করতে সমস্যা হয়েছে: ", dbError);
+                            // ডাটাবেস সেভ না হলেও লগইন করিয়ে ড্যাশবোর্ডে পাঠানো হচ্ছে
+                            window.location.href = "dashboard.html"; 
+                        });
+                    })
+                    .catch((error) => { alert("অ্যাকাউন্ট তৈরি করা যায়নি: " + error.message); });
+            }
+        });
+
+        // গুগল সাইন-ইন লজিক
+        document.getElementById('btn-google').addEventListener('click', () => {
+            signInWithPopup(auth, googleProvider)
+                .then((result) => {
+                    const user = result.user;
+                    // গুগলের ক্ষেত্রে যেহেতু আলাদা মোবাইল নম্বর পাওয়া যায় না, তাই ডিফল্ট টেক্সট সেট করা হলো
+                    setDoc(doc(db, "users", user.uid), {
+                        uid: user.uid,
+                        name: user.displayName,
+                        email: user.email,
+                        mobile: user.phoneNumber || "Google Sign-In",
+                        createdAt: new Date()
+                    }, { merge: true });
+                    
+                    window.location.href = "dashboard.html";
+                })
+                .catch((error) => { alert("গুগল লগইন ব্যর্থ হয়েছে: " + error.message); });
+        });
+    </script>
+</body>
+</html>
