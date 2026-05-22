@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Mock Test Portal</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: sans-serif; 
+            background-color: #121212; 
+            color: white; 
+            margin: 0; 
+            padding: 15px 15px 90px 15px; 
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .header { background: #1e1e1e; padding: 15px; border-radius: 10px; margin-bottom: 10px; }
+        .header h2 { margin: 0 0 5px 0; font-size: 20px; color: #2ecc71; }
+        .header p { margin: 0; font-size: 14px; color: #aaa; }
+        
+        .tabs { display: flex; gap: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; overflow-x: auto; }
+        .tab { cursor: pointer; color: #aaa; padding-bottom: 5px; white-space: nowrap; font-size: 15px; }
+        .tab.active { color: #fff; border-bottom: 2px solid #2ecc71; font-weight: bold; }
+        
+        .list-container-wrapper { flex: 1; }
+        .list-item { background: #1e1e1e; padding: 15px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
+        .list-item:hover { background: #252525; }
+        .btn-start { color: #4a90e2; font-weight: bold; text-decoration: none; font-size: 14px; }
+        .back-btn { background: #333; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-bottom: 15px; font-size: 14px; }
+        .back-btn:hover { background: #444; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background-color: #1e1e1e; border-top: 1px solid #333; height: 70px; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #aaa; text-decoration: none; font-size: 12px; cursor: pointer; background: none; border: none; padding: 5px; }
+        .nav-item.active { color: #2ecc71; }
+        .nav-icon { font-size: 20px; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2 id="exam-title">Loading Test Portal...</h2>
+        <p id="exam-desc">আপনার পছন্দের ক্যাটাগরি বেছে নিয়ে মক টেস্ট শুরু করুন।</p>
+    </div>
+
+    <div class="tabs" id="main-tabs">
+        <div class="tab active" id="tab-mock">Mock Test</div>
+        <div class="tab" id="tab-pyp">PYP</div>
+        <div class="tab" id="tab-subject">Subject Test</div>
+        <div class="tab" id="tab-current">Current Affairs</div>
+    </div>
+
+    <div class="list-container-wrapper">
+        <div id="list-container"></div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="dashboard.html" class="nav-item">
+            <div class="nav-icon">🏠</div>
+            <span>Home</span>
+        </a>
+        <a href="mocktestcomming.html" class="nav-item">
+            <div class="nav-icon">📝</div>
+            <span>Tests</span>
+        </a>
+        <a href="https://wa.me/916294005916?text=নমস্কার,%20আমার%20একটি%20সমস্যা%20হচ্ছে।" target="_blank" class="nav-item" style="color: #25D366;">
+            <div class="nav-icon">💬</div>
+            <span>WhatsApp</span>
+        </a>
+        <button class="nav-item" id="btn-logout">
+            <div class="nav-icon">🚪</div>
+            <span>Logout</span>
+        </button>
+    </div>
+
+    <script src="data.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCoBw6-MTBXtIJPEvP9qB7I3JFpJ7MZM5I",
+            authDomain: "mocktest0.firebaseapp.com",
+            projectId: "mocktest0",
+            storageBucket: "mocktest0.firebasestorage.app",
+            messagingSenderId: "251833325363",
+            appId: "1:251833325363:web:8bdd09a4b717bf045e9046",
+            measurementId: "G-6P2P3WS42H"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentExamKey = urlParams.get('exam');
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) { 
+                window.location.href = "login.html"; 
+            } else {
+                if (currentExamKey) {
+                    initTestPortal();
+                } else {
+                    // যদি URL এ কোনো এক্সাম প্যারামিটার না থাকে, তবে ইউজারের কেনা এক্সামগুলো লোড করবে
+                    document.getElementById('main-tabs').style.display = 'none'; 
+                    document.getElementById('exam-title').innerText = "আপনার কেনা এক্সাম সমূহ"; 
+                    document.getElementById('exam-desc').innerText = "যে ক্যাটাগরিগুলো আপনি কিনেছেন, সেগুলো নিচে দেওয়া হলো।"; 
+                    showPurchasedExams(user.uid); 
+                }
+            }
+        });
+
+        // ইউজারের কেনা কোর্সগুলোর তালিকা তৈরি করার ফাংশন
+        async function showPurchasedExams(uid) {
+            const container = document.getElementById('list-container'); 
+            container.innerHTML = '<p style="color:#aaa; padding:15px;">আপনার প্রোফাইল চেক করা হচ্ছে...</p>'; 
+            
+            const userDoc = await getDoc(doc(db, "users", uid)); 
+            const userData = userDoc.data(); 
+            container.innerHTML = ''; 
+
+            const examNames = {
+                "wb_police": "👮 WB Police Premium Course", 
+                "wbpsc": "🏛️ WBPSC Premium Course", 
+                "railway": "🚂 Railway Premium Course" 
+            };
+
+            let hasPurchased = false;
+
+            if (userData && userData.purchasedExams) {
+                Object.keys(userData.purchasedExams).forEach(examKey => {
+                    if (userData.purchasedExams[examKey] === true) {
+                        hasPurchased = true;
+                        const item = document.createElement('div'); 
+                        item.className = 'list-item'; 
+                        item.innerHTML = `<span>${examNames[examKey] || examKey} (Unlocked)</span><span style="color:#2ecc71;">প্রবেশ করুন ➔</span>`; 
+                        item.onclick = () => {
+                            window.location.href = `mocktestcomming.html?exam=${examKey}`; 
+                        };
+                        container.appendChild(item); 
+                    }
+                });
+            }
+
+            if (!hasPurchased) {
+                container.innerHTML = '<p style="color:#aaa; padding:15px;">আপনি এখনো কোনো এক্সাম ক্যাটাগরি কেনেননি। ড্যাশবোর্ড থেকে পছন্দমতো ক্যাটাগরি কিনতে পারেন।</p>'; 
+            }
+        }
+
+        // লগআউট হ্যান্ডলার
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            if(confirm("আপনি কি নিশ্চিতভাবে লগআউট করতে চান?")) {
+                signOut(auth).then(() => { window.location.href = "login.html"; }); 
+            }
+        });
+    </script>
+
+    <script>
+        let data;
+        
+        function initTestPortal() {
+            const urlParams = new URLSearchParams(window.location.search); 
+            const currentExamKey = urlParams.get('exam'); 
+            data = megaData[currentExamKey]; 
+
+            // ফ্রি টেস্ট সহ সমস্ত পোর্টাল টাইটেল ম্যাপিং
+            const examNames = {
+                "wb_police": "WB Police Mock Test", 
+                "wbpsc": "WBPSC Mock Test Portal", 
+                "railway": "Railway Recruitment Mock Test", 
+                "free_test": "Free Test Mock Test Portal" 
+            };
+            document.getElementById('exam-title').innerText = examNames[currentExamKey] || "Online Mock Test"; 
+
+            // প্রথম ক্যাটাগরি (Mock Test) ডিফল্টভাবে লোড করা হচ্ছে
+            loadList('mock', document.getElementById('tab-mock')); 
+        }
+
+        function loadList(categoryType, tabElement) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); 
+            if(tabElement) tabElement.classList.add('active'); 
+
+            const container = document.getElementById('list-container'); 
+            container.innerHTML = ''; 
+            
+            if(!data) {
+                container.innerHTML = '<p style="color:#aaa; padding:15px;">এই ক্যাটাগরিতে কোনো ডেটা খুঁজে পাওয়া যায়নি।</p>';
+                return; 
+            }
+            
+            const categoryData = data[categoryType]; 
+
+            if (!categoryData || Object.keys(categoryData).length === 0) {
+                container.innerHTML = '<p style="color:#aaa; padding:15px;">আপাতত কোনো টেস্ট উপলব্ধ নেই।</p>'; 
+                return;
+            }
+
+            // ১ম লেভেলের আইটেমগুলো স্ক্রিনে রেন্ডার করা (যেমন: Full Tests, Weekly Tests)
+            Object.keys(categoryData).forEach(keyName => {
+                renderCategoryItem(keyName, () => {
+                    if (categoryType === 'mock') {
+                        showFourthLevel(categoryData[keyName], categoryData, categoryData, keyName, categoryType); 
+                    } else {
+                        showSecondLevel(categoryData[keyName], categoryData, keyName, categoryType); 
+                    }
+                });
+            });
+        }
+
+        function renderCategoryItem(title, onClickAction) {
+            const container = document.getElementById('list-container'); 
+            const item = document.createElement('div'); 
+            item.className = 'list-item'; 
+            item.innerHTML = `<span>📁 ${title}</span><span style="color:#2ecc71;">➔</span>`; 
+            item.onclick = onClickAction; 
+            container.appendChild(item); 
+        }
+
+        function renderFinalTestItem(mockObject) {
+    const container = document.getElementById('list-container'); 
+    
+    // মেইন কার্ড Div
+    const itemCard = document.createElement('div');
+    itemCard.className = 'test-item-card'; // আপনার আগের ক্লাসের নাম যদি আলাদা থাকে, সেটা দেবেন
+    
+    // কার্ডের ভেতরের HTML স্ট্রাকচার
+    itemCard.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; background: #1e1e1e; padding: 15px; margin-bottom: 10px; border-radius: 8px;">
+            
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="width: 40px; height: 40px; background: #2563eb; color: white; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 20px;">
+                    📄
+                </div>
+                
+                <div>
+                    <h3 style="margin: 0; font-size: 16px; color: #fff;">${mockObject.name}</h3>
+                    <p style="margin: 5px 0 0 0; font-size: 13px; color: #aaa;">
+                        ⏳ সময়: ${mockObject.time || 'N/A'} | 📝 প্রশ্ন: ${mockObject.totalQ || 'N/A'} টি
+                    </p>
+                </div>
+            </div>
+
+            <button onclick="window.location.href='${mockObject.link}'" style="background: #2ecc71; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                Start
+            </button>
+            
+        </div>
+    `;
+
+    container.appendChild(itemCard);
+}
+
+        function showSecondLevel(subData, parentObject, parentTitle, parentCat) {
+            const container = document.getElementById('list-container'); 
+            container.innerHTML = ''; 
+            const backBtn = document.createElement('button'); 
+            backBtn.className = 'back-btn'; backBtn.textContent = '← Back'; 
+            backBtn.onclick = () => loadList(parentCat, null); 
+            container.appendChild(backBtn); 
+
+            if (Array.isArray(subData)) {
+                subData.forEach(mockObject => { renderFinalTestItem(mockObject); }); 
+            } else {
+                Object.keys(subData).forEach(subCatName => {
+                    renderCategoryItem(subCatName, () => showThirdLevel(subData[subCatName], subData, parentObject, parentTitle, parentCat)); 
+                });
+            }
+        }
+
+        function showThirdLevel(mockData, currentParent, grandParent, grandParentTitle, grandParentCat) {
+            const container = document.getElementById('list-container'); 
+            container.innerHTML = ''; 
+            const backBtn = document.createElement('button'); 
+            backBtn.className = 'back-btn'; backBtn.textContent = '← Back'; 
+            backBtn.onclick = () => showSecondLevel(currentParent, grandParent, grandParentTitle, grandParentCat); 
+            container.appendChild(backBtn); 
+
+            if (Array.isArray(mockData)) {
+                mockData.forEach(mockObject => { renderFinalTestItem(mockObject); }); 
+            } else {
+                Object.keys(mockData).forEach(subChapterName => {
+                    renderCategoryItem(subChapterName, () => showFourthLevel(mockData[subChapterName], mockData, currentParent, grandParentTitle, grandParentCat)); 
+                });
+            }
+        }
+
+        function showFourthLevel(mockArray, currentParent, grandParent, grandParentTitle, grandParentCat) {
+            const container = document.getElementById('list-container'); 
+            container.innerHTML = ''; 
+            const backBtn = document.createElement('button'); 
+            backBtn.className = 'back-btn'; backBtn.textContent = '← Back'; 
+            if(grandParentCat === 'mock') {
+                backBtn.onclick = () => loadList(grandParentCat, null); 
+            } else {
+                backBtn.onclick = () => showThirdLevel(currentParent, grandParent, grandParentTitle, grandParentCat); 
+            }
+            container.appendChild(backBtn); 
+            mockArray.forEach(mockObject => { renderFinalTestItem(mockObject); }); 
+        }
+
+        // ট্যাবগুলোতে ক্লিক ইভেন্ট লিসেনার সেট করা
+        document.getElementById('tab-mock').addEventListener('click', (e) => loadList('mock', e.target)); 
+        document.getElementById('tab-pyp').addEventListener('click', (e) => loadList('pyp', e.target)); 
+        document.getElementById('tab-subject').addEventListener('click', (e) => loadList('subject', e.target)); 
+        document.getElementById('tab-current').addEventListener('click', (e) => loadList('current', e.target)); 
+    </script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Payment Portal</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: sans-serif; background-color: #121212; color: white; text-align: center; padding: 15px; margin: 0; }
+        
+        .payment-box { 
+            background: #1e1e1e; 
+            padding: 25px 20px; \n            border-radius: 10px; 
+            display: inline-block; 
+            max-width: 450px; 
+            width: 100%; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
+            margin-top: 20px;
+        }
+        
+        h2 { color: #f1c40f; margin-top: 0; font-size: 22px; }
+        .exam-name { font-weight: bold; color: #4a90e2; font-size: 18px; margin: 10px 0; }
+        .price { font-size: 30px; color: #2ecc71; margin: 10px 0; font-weight: bold; }
+        
+        .instamojo-btn {
+            display: inline-block;
+            background: #130f40;
+            color: #ffbe76;
+            text-decoration: none;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            margin: 15px 0;
+            width: 100%;
+            border: 2px solid #ffbe76;
+            transition: 0.3s;
+        }
+        .instamojo-btn:hover {
+            background: #ffbe76;
+            color: #130f40;
+        }
+
+        .btn-whatsapp { 
+            display: inline-block; 
+            background-color: #25D366; 
+            color: white; 
+            text-decoration: none; 
+            padding: 12px 20px; 
+            font-size: 15px; 
+            font-weight: bold; 
+            border-radius: 5px; 
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .notice { font-size: 12px; color: #aaa; margin-top: 15px; line-height: 1.4; text-align: left; }
+    </style>
+</head>
+<body>
+
+    <div class="payment-box">
+        <h2>Premium Test Unlock 🔒</h2>
+        <p>নিচের বাটনে ক্লিক করে পেমেন্ট সম্পন্ন করুন।</p>
+        
+        <div class="exam-name" id="display-exam-name">Loading Exam...</div>
+        <div class="price" id="display-price">₹00</div>
+
+        <a href="#" class="instamojo-btn" id="pay-via-app">💳 PAY VIA INSTAMOJO</a>
+
+        <p style="font-size: 14px; margin: 15px 0 5px 0; color: #eee;">পেমেন্ট করার পর স্ক্রিনশট নিচে পাঠান:</p>
+        
+        <a href="#" class="btn-whatsapp" id="btn-verify-payment">💬 SEND PAYMENT SCREENSHOT</a>
+
+        <div class="notice">
+            📌 <b>নির্দেশনাবলী:</b><br>
+            ১. "PAY VIA INSTAMOJO" বাটনে ক্লিক করে পেমেন্ট করুন।<br>
+            ২. পেমেন্ট সফল হলে একটি স্ক্রিনশট নিন।<br>
+            ৩. নিচের "SEND PAYMENT SCREENSHOT" বাটনে ক্লিক করে আমাদের হোয়াটসঅ্যাপে স্ক্রিনশটটি পাঠান। ১০-১৫ মিনিটের মধ্যে আপনার কোর্স চালু করে দেওয়া হবে।
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyCoBw6-MTBXtIJPEvP9qB7I3JFpJ7MZM5I",
+          authDomain: "mocktest0.firebaseapp.com",
+          projectId: "mocktest0",
+          storageBucket: "mocktest0.firebasestorage.app",
+          messagingSenderId: "251833325363",
+          appId: "1:251833325363:web:8bdd09a4b717bf045e9046",
+          measurementId: "G-6P2P3WS42H"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        const MY_WHATSAPP_NUMBER = "916294005916";
+
+        // এক্সাম ডেটাবেস ডিকশনারি (ড্যাশবোর্ড অনুযায়ী সেট করা)
+        const examDetails = {
+            "wb_police": {
+                name: "WB Police",
+                price: "10",
+                link: "https://imjo.in/YourWBPoliceLink" // 👈 আপনার আসল ইনস্টামোজো লিংক এখানে বসান
+            },
+            "wbpsc": {
+                name: "WBPSC Exam",
+                price: "15",
+                link: "https://imjo.in/YourWBPSCLink"   // 👈 আপনার আসল ইনস্টামোজো লিংক এখানে বসান
+            },
+            "railway": {
+                name: "Railway Exam",
+                price: "20",
+                link: "https://imjo.in/YourRailwayLink" // 👈 আপনার আসল ইনস্টামোজো লিংক এখানে বসান
+            }
+        };
+
+        // URL থেকে 'exam' প্যারামিটার তুলে নেওয়ার কোড
+        const urlParams = new URLSearchParams(window.location.search);
+        const examKey = urlParams.get('exam') || 'wb_police'; // কোনো কারণে না পেলে ডিফল্ট wb_police
+
+        // ডাটাবেস থেকে তথ্য নেওয়া হচ্ছে
+        const currentExam = examDetails[examKey] || examDetails["wb_police"];
+
+        const currentExamName = currentExam.name;
+        const currentPrice = currentExam.price;
+        const currentInstamojoLink = currentExam.link;
+
+        // UI-তে ডাটা অটোমেটিক বসানো হচ্ছে
+        document.getElementById('display-exam-name').innerText = currentExamName;
+        document.getElementById('display-price').innerText = "₹" + currentPrice;
+
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = "login.html";
+            } else {
+                // ইনস্টামোজো লিংক বাটনে অটোমেটিক সেট করা হলো
+                document.getElementById('pay-via-app').href = currentInstamojoLink;
+
+                const displayName = user.displayName || user.email.split('@')[0];
+                const userEmail = user.email || "N/A";
+                const userId = user.uid;
+
+                // হোয়াটসঅ্যাপ টেক্সট মেসেজ জেনারেটর
+                const whatsappMessage = `নমস্কার, আমি পেমেন্ট করেছি। দয়া করে আমার টেস্টটি আনলক করে দিন।\n\n` +
+                                        `📝 নাম: ${displayName}\n` +
+                                        `📧 ইমেইল: ${userEmail}\n` +
+                                        `🆔 ইউজার আইডি: ${userId}\n` +
+                                        `📚 কোর্স/পরীক্ষা: ${currentExamName}\n` +
+                                        `💰 টাকার পরিমাণ: ₹${currentPrice}`;
+
+                const whatsappUrl = `https://wa.me/${MY_WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
+                
+                document.getElementById('btn-verify-payment').href = whatsappUrl;
+                document.getElementById('btn-verify-payment').target = "_blank";
+            }
+        });
+    </script>
+</body>
+</html>

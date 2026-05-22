@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - WB Mock Test Portal</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: sans-serif; 
+            background-color: #121212; /* ডার্ক মোড ব্যাকগ্রাউন্ড ফিক্স করা হয়েছে */
+            color: #ffffff; 
+            margin: 0; 
+            padding: 20px 15px 90px 15px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
+        .top-header { width: 100%; max-width: 600px; display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; margin-bottom: 20px; }
+        .user-info h2 { margin: 0; font-size: 22px; color: #ffffff; }
+        .user-info p { margin: 3px 0 0 0; font-size: 14px; color: #aaa; }
+        .guest-avatar { width: 45px; height: 45px; background-color: #7f8c8d; color: #fff; font-size: 20px; font-weight: bold; display: flex; justify-content: center; align-items: center; border-radius: 50%; }
+
+        .section-title { width: 100%; max-width: 600px; font-size: 18px; margin: 0 0 15px 5px; color: #2ecc71; }
+        .categories-grid { width: 100%; max-width: 600px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; }
+        .category-card { background-color: #1e1e1e; border-radius: 10px; padding: 20px 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; transition: 0.2s; width: 100%; }
+        .category-card:hover { background-color: #252525; }
+        .card-icon { font-size: 32px; margin-bottom: 10px; }
+        .card-title { font-size: 15px; margin: 0; }
+
+        /* ফ্রী মক টেস্ট বাটনের জন্য বিশেষ হাইলাইট স্টাইল */
+        .free-test-card { border: 1px dashed #2ecc71; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background-color: #1e1e1e; border-top: 1px solid #333; height: 70px; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #aaa; text-decoration: none; font-size: 12px; cursor: pointer; background: none; border: none; padding: 5px; }
+        .nav-item.active { color: #2ecc71; }
+        .nav-icon { font-size: 20px; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="top-header">
+        <div class="user-info">
+            <h2>নমস্কার, <span id="user-name">Bright</span> 👋</h2>
+            <p>আজকেই আপনার পরীক্ষা প্রস্তুতি শুরু করুন।</p>
+        </div>
+        <div class="guest-avatar">?</div>
+    </div>
+
+    <h3 class="section-title">Active Exams (চলতি পরীক্ষা সমূহ)</h3>
+    <div class="categories-grid">
+        <div class="category-card" onclick="redirectToLogin()">
+            <div class="card-icon">👮</div>
+            <h4 class="card-title">WB Police</h4>
+        </div>
+        <div class="category-card" onclick="redirectToLogin()">
+            <div class="card-icon">🏛️</div>
+            <h4 class="card-title">WBPSC Exam</h4>
+        </div>
+        <div class="category-card" onclick="redirectToLogin()">
+            <div class="card-icon">🚂</div>
+            <h4 class="card-title">Railway Exam</h4>
+        </div>
+        <div class="category-card free-test-card" onclick="redirectToLogin('free')">
+            <div class="card-icon">🔥</div>
+            <h4 class="card-title" style="color: #2ecc71; font-weight: bold;">Free Mock Test</h4>
+        </div>
+    </div>
+
+    <h3 class="section-title">Upcoming Exams (আসন্ন পরীক্ষা)</h3>
+    <div class="categories-grid" style="opacity: 0.5;">
+        <div class="category-card" style="cursor: not-allowed;"><div class="card-icon">📝</div><h4 class="card-title">SSC CGL / CHSL</h4></div>
+        <div class="category-card" style="cursor: not-allowed;"><div class="card-icon">🏫</div><h4 class="card-title">WB TET / SLST</h4></div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="index.html" class="nav-item active">
+            <div class="nav-icon">🏠</div>
+            <span>Home</span>
+        </a>
+        <a href="https://wa.me/916294005916?text=%E0%A6%A8%E0%A6%AE%E0%A6%B8%E0%A7%8D%E0%A6%95%E0%A6%BE%E0%A6%B0%2C%20%E0%A6%86%E0%A6%AE%E0%A6%BE%E0%A6%95%E0%A7%87%20%E0%A6%8F%E0%A6%87%20WBP%20mock%20app%20%E0%A6%B8%E0%A6%AE%E0%A7%8D%E0%A6%BC%E0%A6%AC%E0%A6%A7%E0%A7%87%20%E0%A6%95%E0%A6%9B%E0%A7%81%20%E0%A6%9C%E0%A6%BE%E0%A6%A8%E0%A6%A4%E0%A7%87%20%E0%A6%B9%E0%A6%AC%E0%A7%87" target="_blank" class="nav-item" style="color: #25D366;">
+            <div class="nav-icon">💬</div>
+            <span>WhatsApp</span>
+        </a>
+        <a href="login.html" class="nav-item" style="color: #2ecc71;">
+            <div class="nav-icon">🔑</div>
+            <span>Login</span>
+        </a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyCoBw6-MTBXtIJPEvP9qB7I3JFpJ7MZM5I",
+          authDomain: "mocktest0.firebaseapp.com",
+          projectId: "mocktest0",
+          storageBucket: "mocktest0.firebasestorage.app",
+          messagingSenderId: "251833325363",
+          appId: "1:251833325363:web:8bdd09a4b717bf045e9046",
+          measurementId: "G-6P2P3WS42H"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // অটো-ড্যাশবোর্ড রিডাইরেক্ট লজিক
+        onAuthStateChanged(auth, (user) => {
+            if (user) { 
+                window.location.href = "dashboard.html"; 
+            }
+        });
+
+        // ক্লিক লজিক
+        window.redirectToLogin = function(type) {
+            if(type === 'free') {
+                alert("ফ্রী মক টেস্ট দিতে আপনাকে প্রথমে লগইন বা অ্যাকাউন্ট তৈরি করতে হবে।");
+            } else {
+                alert("পরীক্ষায় অংশ নিতে আপনাকে প্রথমে লগইন বা অ্যাকাউন্ট তৈরি করতে হবে।");
+            }
+            window.location.href = "login.html";
+        }
+    </script>
+</body>
+</html>
