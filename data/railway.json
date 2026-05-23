@@ -1,0 +1,14 @@
+{
+  "mock": {
+    "RRB NTPC": [
+      { "name": "NTPC CBT-1 Mock 1", "link": "Mocktestformat.html" },
+      { "name": "NTPC CBT-1 Premium Mock 2", "link": "Mocktestformat.html" }
+    ],
+    "Group D": [
+      { "name": "Railway Group D Mock 1", "link": "Mocktestformat.html" }
+    ]
+  },
+  "current": {},
+  "pyp": {},
+  "subject": {}
+}

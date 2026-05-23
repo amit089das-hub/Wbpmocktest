@@ -1,0 +1,112 @@
+{
+  "wbp_free_mock": {
+    "WB Police": {
+    "WBP Constable": [
+      { "name": "WBP Constable Mock 1", "link": "Mocktestformat.html?testfile=free_mock_test/WBP_constable_free/wbp_constable_free_mock_1", "totalQ": 20, "time": "90 Min" },
+      { "name": "WBP Constable Mock 2", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "WBP Constable Mock 3", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "WBP Constable Mock 4", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "WBP Constable Mock 5", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" }
+    ],
+    "WBP SI": [
+      { "name": "WBP SI Mock 1", "link": "Mocktestformat.html?testfile=free_mock_test/WBP_si_free/wbp_si_free_mock_1", "totalQ": 20, "time": "90 Min" },
+      { "name": "WBP SI Mock 2", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "WBP SI Mock 3", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "WBP SI Mock 4", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "WBP SI Mock 5", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" }
+    ],
+    "KP Constable": [
+      { "name": "WBP ASI Mock 1", "link": "Mocktestformat.html?testfile=free_mock_test/WBP_asi_free/wbp_asi_free_mock_1", "totalQ": 20, "time": "90 Min" },
+      { "name": "WBP ASI Mock 2", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "WBP ASI Mock 3", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "WBP ASI Mock 4", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "WBP ASI Mock 5", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" }
+    ],
+    "KP SI": [
+      { "name": "WBP SI Mock 1", "link": "Mocktestformat.html?testfile=free_mock_test/WBP_si_free/wbp_si_free_mock_1", "totalQ": 20, "time": "90 Min" },
+      { "name": "WBP SI Mock 2", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "WBP SI Mock 3", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "WBP SI Mock 4", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "WBP SI Mock 5", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" }
+    ]
+  },
+  "Railway": {
+    "RRB NTPC": [
+      { "name": "RRB NTPC Mock 1", "link": "Mocktestformat.html?testfile=free_mock_test/WBP_constable_free/wbp_constable_free_mock_1", "totalQ": 20, "time": "90 Min" },
+      { "name": "RRB NTPC Mock 2", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "RRB NTPC Mock 3", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "RRB NTPC Mock 4", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "RRB NTPC Mock 5", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" }
+    ],
+    "RRB Group D": [
+      { "name": "RRB Group D Mock 1", "link": "Mocktestformat.html?testfile=free_mock_test/WBP_si_free/wbp_si_free_mock_1", "totalQ": 20, "time": "90 Min" },
+      { "name": "RRB Group D Mock 2", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "RRB Group D Mock 3", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "RRB Group D Mock 4", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "RRB Group D Mock 5", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" }
+    ],
+    "RRB ALP": [
+      { "name": "RRB ALP Mock 1", "link": "Mocktestformat.html?testfile=free_mock_test/WBP_asi_free/wbp_asi_free_mock_1", "totalQ": 20, "time": "90 Min" },
+      { "name": "RRB ALP Mock 2", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "RRB ALP Mock 3", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "RRB ALP Mock 4", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "RRB ALP Mock 5", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" }
+    ],
+    "RRB Technician": [
+      { "name": "RRB Technician Mock 1", "link": "Mocktestformat.html?testfile=free_mock_test/WBP_si_free/wbp_si_free_mock_1", "totalQ": 20, "time": "90 Min" },
+      { "name": "RRB Technician Mock 2", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "RRB Technician Mock 3", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "RRB Technician Mock 4", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "RRB Technician Mock 5", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" }
+    ]
+  },
+  "WBPSC": {
+    "Miscellaneous": {
+    "Miscellaneous Prelims": [
+      { "name": "Miscellaneous Prelims Mock 1", "link": "Mocktestformat.html?testfile=free_mock_test/WBP_constable_free/wbp_constable_free_mock_1", "totalQ": 20, "time": "90 Min" },
+      { "name": "Miscellaneous Prelims Mock 2", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "Miscellaneous Prelims Mock 3", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "Miscellaneous Prelims Mock 4", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "Miscellaneous Prelims Mock 5", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" }
+    ],
+    "Miscellaneous Mains": [
+      { "name": "Miscellaneous Mains Mock 1", "link": "Mocktestformat.html?testfile=free_mock_test/WBP_si_free/wbp_si_free_mock_1", "totalQ": 20, "time": "90 Min" },
+      { "name": "Miscellaneous Mains Mock 2", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "Miscellaneous Mains Mock 3", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "Miscellaneous Mains Mock 4", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "Miscellaneous Mains Mock 5", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" }
+    ]
+  },
+  "WBPSC Group D": [
+      { "name": "WBPSC Group D Mock 1", "link": "Mocktestformat.html?testfile=free_mock_test/WBP_asi_free/wbp_asi_free_mock_1", "totalQ": 20, "time": "90 Min" },
+      { "name": "WBPSC Group D Mock 2", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "WBPSC Group D Mock 3", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "WBPSC Group D Mock 4", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "WBPSC Group D Mock 5", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" }
+       ]
+    
+  }
+},
+  "pyp": {
+
+  },
+  "subject": {
+    "maths": {
+      "Number System": [
+        { "name": "Number System Mock 1", "link": "Mocktestformat.html?testfile=free_mock_test/WBP_constable_free/wbp_constable_free_mock_1", "totalQ": 20, "time": "90 Min" },
+        { "name": "Number System Mock 2", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+        { "name": "Number System Mock 3", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+        { "name": "Number System Mock 4", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+        { "name": "Number System Mock 5", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" }
+      ],
+    "Percentage": [
+      { "name": "Percentage Mock 1", "link": "Mocktestformat.html?testfile=free_mock_test/WBP_si_free/wbp_si_free_mock_1", "totalQ": 20, "time": "90 Min" },
+      { "name": "Percentage Mock 2", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "Percentage Mock 3", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "Percentage Mock 4", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "Percentage Mock 5", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" }
+    ]
+    }
+  },
+  "current": {}
+}

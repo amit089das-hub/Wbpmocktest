@@ -101,11 +101,11 @@
 
     <div class="top-header">
         <div class="user-info">
-            <h2>নমস্কার, <span id="user-name">Loading...</span> 👋</h2>
+            <h2>নমস্কার, <span id="user-name">...</span> 👋</h2>
             <p>আজকে আপনার প্রস্তুতির লক্ষ্য পূরণ করুন।</p>
         </div>
         <div> <button id="btn-admin-panel" style="display: none; background: #e67e22; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer;">Admin Panel ⚙️</button>    </div>
-        <div class="user-avatar" id="user-avatar">-</div>
+        <div class="user-avatar" id="user-avatar">⌛</div>
         
     </div>
 
@@ -198,6 +198,12 @@
 
     // ⚙️ আপনার মূল অ্যাডমিন জিমেইল আইডিটি এখানে সেট করে দেওয়া হলো
     const ADMIN_EMAIL = "amit089das@gmail.com"; 
+// ⚡ লোকাল স্টোরেজ থেকে সাথে সাথে নাম লোড করার লজিক
+const cachedName = localStorage.getItem('user_name');
+if (cachedName) {
+    document.getElementById('user-name').innerText = cachedName;
+    document.getElementById('user-avatar').innerText = cachedName.charAt(0).toUpperCase();
+}
 
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
@@ -216,10 +222,16 @@
                 const userDocSnap = await getDoc(userDocRef);
 
                 if (userDocSnap.exists()) {
-                    const userData = userDocSnap.data();
-                    
-                    document.getElementById('user-name').innerText = userData.name || user.displayName || "User";
-                    document.getElementById('user-avatar').innerText = (userData.name || user.displayName || "U").charAt(0).toUpperCase();
+    const userData = userDocSnap.data();
+    const finalName = userData.name || user.displayName || "User";
+    
+    // ব্রাউজারে নাম সেভ করে রাখা হচ্ছে ভবিষ্যতের জন্য
+    localStorage.setItem('user_name', finalName);
+
+    // স্ক্রিনে ডাটা দেখানো হচ্ছে
+    document.getElementById('user-name').innerText = finalName;
+    document.getElementById('user-avatar').innerText = finalName.charAt(0).toUpperCase();
+
 
                     userPurchasedExams = userData.purchasedExams || {};
                     
@@ -288,8 +300,11 @@
         });
     });
 
-    document.getElementById('btn-logout').addEventListener('click', () => {
+        document.getElementById('btn-logout').addEventListener('click', () => {
         if(confirm("আপনি কি নিশ্চিতভাবে লগআউট করতে চান?")) {
+            // ⚡ লগআউট করার সময় লোকাল স্টোরেজ ক্লিয়ার করার নতুন লাইন
+            localStorage.removeItem('user_name'); 
+            
             signOut(auth).then(() => { window.location.href = "login.html"; });
         }
     });

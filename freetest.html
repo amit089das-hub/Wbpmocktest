@@ -40,15 +40,15 @@
 <body>
 
     <div class="header">
-        <h2 id="exam-title">Free Test Mock Test Portal</h2>
-        <p id="exam-desc">সম্পূর্ণ বিনামূল্যে নিচের মক টেস্টগুলোতে অংশগ্রহণ করুন।</p>
+        <h2>Free Test Mock Test Portal</h2>
+        <p>বিনামূল্যে মক টেস্ট দিন এবং আপনার প্রস্তুতি যাচাই করুন।</p>
     </div>
 
-    <div class="tabs" id="main-tabs">
-        <div class="tab active" id="tab-main" data-cat="mock">Mock</div>
-        <div class="tab" id="tab-pyp" data-cat="pyp">PYP</div>
-        <div class="tab" id="tab-subject" data-cat="subject">Subject Test</div>
-        <div class="tab" id="tab-current" data-cat="current">Current Affairs</div>
+    <div class="tabs">
+        <div class="tab active" id="tab-wbp_free_mock">Exam</div>
+        <div class="tab" id="tab-pyp">PYQ</div>
+        <div class="tab" id="tab-subject">Subject Test</div>
+        <div class="tab" id="tab-current">Current Affairs</div>
     </div>
 
     <div class="list-container-wrapper">
@@ -60,11 +60,11 @@
             <div class="nav-icon">🏠</div>
             <span>Home</span>
         </a>
-        <a href="mocktestcomming.html" class="nav-item">
+        <a href="freetest.html?exam=free_test" class="nav-item active">
             <div class="nav-icon">📝</div>
-            <span>Tests</span>
+            <span>Free Tests</span>
         </a>
-        <a href="https://wa.me/916294005916?text=নমস্কার,%20আমার%20একটি%20সমস্যা%20হচ্ছে।" target="_blank" class="nav-item" style="color: #25D366;">
+        <a href="https://wa.me/916294005916?text=নমস্কার" target="_blank" class="nav-item" style="color: #25D366;">
             <div class="nav-icon">💬</div>
             <span>WhatsApp</span>
         </a>
@@ -73,59 +73,75 @@
             <span>Logout</span>
         </button>
     </div>
-    <script src="data.js"></script>
 
     <script>
-        // ফ্রি টেস্টের ডেটা লোড করা হচ্ছে 
-        const freeData = megaData["free_test"];
-        let currentCategory = 'mock'; // ডিফল্ট ক্যাটাগরি
-        let navigationHistory = []; // ব্যাক বাটনের হিস্টোরি ট্র্যাক করার জন্য
+        let data = null; 
+        const container = document.getElementById('list-container');
+        let navigationHistory = [];
 
-        // পেজ লোড হলে প্রথম রান হবে
         window.onload = function() {
-            initFreePortal();
+            initFreeTestPortal();
         };
 
-        function initFreePortal() {
-            setupTabs();
-            loadCategory(currentCategory);
+        async function initFreeTestPortal() {
+            container.innerHTML = '<p style="color:#aaa; padding:15px;">মক টেস্টের ডেটা লোড হচ্ছে...</p>';
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentExamKey = urlParams.get('exam') || 'free_test';
+
+            try {
+                // আপনার অরিজিনাল JSON ফাইল ফেচ করার কোড
+                const response = await fetch(`./data/${currentExamKey}.json`);
+                
+                if (!response.ok) {
+                    throw new Error("JSON file could not be fetched.");
+                }
+
+                data = await response.json(); 
+
+                // ডেটা আসার পর wbp_free_mock ওপেন হবে
+                switchCategory('wbp_free_mock', document.getElementById('tab-wbp_free_mock'));
+
+            } catch (error) {
+                console.error("Error loading JSON data: ", error);
+                container.innerHTML = '<p style="color:#e74c3c; padding:15px;">দুঃখিত, মক টেস্টের ডেটা লোড করা যায়নি। অনুগ্রহ করে ফাইল পাথ চেক করুন।</p>';
+            }
         }
 
-        // ট্যাব ক্লিক হ্যান্ডলার সেটআপ
-        function setupTabs() {
-            const tabs = document.querySelectorAll('.tab');
-            tabs.forEach(tab => {
-                tab.addEventListener('click', (e) => {
-                    tabs.forEach(t => t.classList.remove('active'));
-                    e.target.classList.add('active');
-                    
-                    currentCategory = e.target.getAttribute('data-cat');
-                    navigationHistory = []; // নতুন ট্যাবে গেলে হিস্টোরি ক্লিয়ার হবে
-                    loadCategory(currentCategory);
-                });
-            });
-        }
+        function switchCategory(categoryType, tabElement) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            if(tabElement) tabElement.classList.add('active');
+            
+            navigationHistory = []; 
 
-        // মূল ক্যাটাগরি লোড করার ফাংশন
-        function loadCategory(categoryType) {
-            if (!freeData || !freeData[categoryType]) {
-                document.getElementById('list-container').innerHTML = '<p style="color:#aaa; padding:15px;">আপাতত কোনো টেস্ট উপলব্ধ নেই।</p>';
+            if (!data) {
+                container.innerHTML = '<p style="color:#aaa; padding:15px;">কোনো ডেটা উপলব্ধ নেই।</p>';
                 return;
             }
-            // হিস্টোরি খালি করে একদম শুরুর ডেটা পুশ করা হচ্ছে
-            navigationHistory = [freeData[categoryType]];
+
+            let categoryData = data[categoryType];
+            if (!categoryData) {
+                categoryData = data[categoryType.toUpperCase()] || data[categoryType.toLowerCase()];
+            }
+
+            if (!categoryData || Object.keys(categoryData).length === 0) {
+                container.innerHTML = '<p style="color:#aaa; padding:15px;">আপাতত কোনো টেস্ট উপলব্ধ নেই।</p>';
+                return;
+            }
+
+            const firstLevelData = [];
+            Object.keys(categoryData).forEach(key => {
+                firstLevelData.push({ name: key, type: 'folder', children: categoryData[key] });
+            });
+
+            navigationHistory.push({ title: 'Root', data: firstLevelData });
             renderCurrentLevel();
         }
 
-        // স্ক্রিনে ডেটা রেন্ডার করার ডায়নামিক ফাংশন
         function renderCurrentLevel() {
-            const container = document.getElementById('list-container');
             container.innerHTML = '';
+            const currentLevel = navigationHistory[navigationHistory.length - 1];
 
-            // কারেন্ট লেভেলের ডেটা হিস্টোরির শেষ উপাদান থেকে আসবে
-            const currentData = navigationHistory[navigationHistory.length - 1];
-
-            // যদি হিস্টোরিতে ১টির বেশি ডেটা থাকে, তবেই ব্যাক বাটন দেখাবে
             if (navigationHistory.length > 1) {
                 const backBtn = document.createElement('button');
                 backBtn.className = 'back-btn';
@@ -134,46 +150,74 @@
                 container.appendChild(backBtn);
             }
 
-            // ১. চেক করা হচ্ছে এটা ফাইনাল টেস্টের অ্যারে (Array) কিনা
-            if (Array.isArray(currentData)) {
-                currentData.forEach(mockObject => {
-                    const item = document.createElement('div');
-                    item.className = 'list-item';
-                    item.innerHTML = `<span>📝 ${mockObject.name}</span><a href="${mockObject.link}" class="btn-start">START TEST ➔</a>`;
-                    container.appendChild(item);
-                });
-            } 
-            // ২. যদি এটা অবজেক্ট (Object) হয়, তার মানে ভেতরে আরও ফোল্ডার/ক্যাটাগরি আছে
-            else if (typeof currentData === 'object' && currentData !== null) {
-                const keys = Object.keys(currentData);
-                if(keys.length === 0) {
-                    container.innerHTML += '<p style="color:#aaa; padding:15px;">কোনো ডেটা খুঁজে পাওয়া যায়নি।</p>';
-                    return;
-                }
-
-                keys.forEach(keyName => {
-                    const item = document.createElement('div');
-                    item.className = 'list-item';
-                    item.innerHTML = `<span>📁 ${keyName}</span><span style="color:#2ecc71;">➔</span>`;
-                    
-                    // ফোল্ডারে ক্লিক করলে ওই ডেটা হিস্টোরিতে পুশ হবে এবং পেজ রি-রেন্ডার হবে
-                    item.onclick = () => {
-                        navigationHistory.push(currentData[keyName]);
+            currentLevel.data.forEach(item => {
+                if (item.type === 'folder') {
+                    const div = document.createElement('div');
+                    div.className = 'list-item';
+                    div.innerHTML = `<span>📁 ${item.name}</span><span style="color:#2ecc71;">➔</span>`;
+                    div.onclick = () => {
+                        let nextData = [];
+                        if (Array.isArray(item.children)) {
+                            item.children.forEach(test => {
+                                nextData.push({ ...test, type: 'test' });
+                            });
+                        } else if (typeof item.children === 'object') {
+                            Object.keys(item.children).forEach(k => {
+                                nextData.push({ name: k, type: 'folder', children: item.children[k] });
+                            });
+                        }
+                        navigationHistory.push({ title: item.name, data: nextData });
                         renderCurrentLevel();
                     };
-                    container.appendChild(item);
-                });
+                    container.appendChild(div);
+                } else if (item.type === 'test') {
+                    renderFinalTestItem(item);
+                }
+            });
+        }
+
+        function renderFinalTestItem(mockObject) {
+            const itemCard = document.createElement('div');
+            
+            const isComingSoon = !mockObject.link || mockObject.link.trim() === "" || mockObject.link.toLowerCase() === "coming soon";
+            
+            const buttonHtml = isComingSoon 
+                ? `<button disabled style="background: #555; color: #aaa; border: none; padding: 8px 15px; border-radius: 5px; cursor: not-allowed; font-weight: bold;">Coming Soon</button>`
+                : `<button onclick="window.location.href='${mockObject.link}'" style="background: #2ecc71; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">Start</button>`;
+
+            itemCard.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; background: #1e1e1e; padding: 15px; margin-bottom: 10px; border-radius: 8px;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="width: 40px; height: 40px; background: ${isComingSoon ? '#444' : '#2563eb'}; color: white; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 20px;">
+                            ${isComingSoon ? '🔒' : '📄'}
+                        </div>
+                        <div>
+                            <h3 style="margin: 0; font-size: 16px; color: #fff;">${mockObject.name}</h3>
+                            <p style="margin: 5px 0 0 0; font-size: 13px; color: #aaa;">
+                                ⏳ সময়: ${mockObject.time || 'N/A'} | 📝 প্রশ্ন: ${mockObject.totalQ || 'N/A'} টি
+                            </p>
+                        </div>
+                    </div>
+                    ${buttonHtml}
+                </div>
+            `;
+            container.appendChild(itemCard);
+        }
+
+        function goBack() {
+            if (navigationHistory.length > 1) {
+                navigationHistory.pop();
+                renderCurrentLevel();
             }
         }
 
-        // ব্যাক বাটনের কাজ
-        function goBack() {
-            if (navigationHistory.length > 1) {
-                navigationHistory.pop(); // শেষ এলিমেন্ট বাদ দেওয়া হলো
-                renderCurrentLevel(); // আগের লেভেল রেন্ডার করা হলো
-            }
-        }
+        // ইভেন্ট লিসেনারে tab-mock এর জায়গায় tab-wbp_free_mock বসানো হয়েছে
+        document.getElementById('tab-wbp_free_mock').addEventListener('click', (e) => switchCategory('wbp_free_mock', e.target));
+        document.getElementById('tab-pyp').addEventListener('click', (e) => switchCategory('pyp', e.target));
+        document.getElementById('tab-subject').addEventListener('click', (e) => switchCategory('subject', e.target));
+        document.getElementById('tab-current').addEventListener('click', (e) => switchCategory('current', e.target));
     </script>
+    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -191,14 +235,9 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
-        // লগআউট বাটনের কাজ
         document.getElementById('btn-logout').addEventListener('click', () => {
             if(confirm("আপনি কি নিশ্চিতভাবে লগআউট করতে চান?")) {
-                signOut(auth).then(() => { 
-                    window.location.href = "login.html"; 
-                }).catch((error) => {
-                    alert("লগআউট করতে সমস্যা হয়েছে: " + error.message);
-                });
+                signOut(auth).then(() => { window.location.href = "login.html"; });
             }
         });
     </script>
