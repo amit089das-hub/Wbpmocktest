@@ -22,7 +22,6 @@
         .user-info p { margin: 3px 0 0 0; font-size: 14px; color: #aaa; }
         .user-avatar { width: 45px; height: 45px; background-color: #2ecc71; color: #fff; font-size: 20px; font-weight: bold; display: flex; justify-content: center; align-items: center; border-radius: 50%; }
         
-        /* 📊 প্রোগ্রেস বার ডিজাইন */
         .progress-card { width: 100%; max-width: 600px; background: #1e1e1e; border-radius: 10px; padding: 20px; margin-bottom: 25px; display: none; }
         .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .progress-header span { font-size: 15px; color: #ddd; }
@@ -30,7 +29,17 @@
         .progress-bar-fill { width: 0%; height: 100%; background: #2ecc71; border-radius: 5px; transition: width 0.5s ease; }
 
         .section-title { width: 100%; max-width: 600px; font-size: 18px; margin: 0 0 15px 5px; color: #2ecc71; }
-        .categories-grid { width: 100%; max-width: 600px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; }
+        
+        .categories-grid { 
+            width: 100%; 
+            max-width: 600px; 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 15px; 
+            margin-bottom: 25px; 
+            opacity: 0; 
+            transition: opacity 0.2s ease-in-out;
+        }
         
         .category-card { 
             background-color: #1e1e1e; 
@@ -106,7 +115,6 @@
         </div>
         <div> <button id="btn-admin-panel" style="display: none; background: #e67e22; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer;">Admin Panel ⚙️</button>    </div>
         <div class="user-avatar" id="user-avatar">⌛</div>
-        
     </div>
 
     <div class="progress-card" id="syllabus-progress-card">
@@ -120,7 +128,7 @@
     </div>
 
     <h3 class="section-title">Active Exams (চলতি পরীক্ষা সমূহ)</h3>
-    <div class="categories-grid">
+    <div class="categories-grid" id="main-exam-grid">
         <div class="category-card exam-btn" data-exam="wb_police">
             <div class="premium-badge">👑 🔒</div>
             <div class="card-icon">👮</div>
@@ -151,13 +159,13 @@
     </div>
 
     <h3 class="section-title">Upcoming Exams (আসন্ন পরীক্ষা)</h3>
-    <div class="categories-grid" style="opacity: 0.5;">
+    <div class="categories-grid" style="opacity: 0.5; display: grid;">
         <div class="category-card" style="cursor: not-allowed;"><div class="card-icon">📝</div><h4 class="card-title">SSC CGL / CHSL</h4></div>
         <div class="category-card" style="cursor: not-allowed;"><div class="card-icon">🏫</div><h4 class="card-title">WB TET / SLST</h4></div>
     </div>
 
     <div class="bottom-nav">
-        <a href="dashboard.html" class="nav-item">
+        <a href="dashboard.html" class="nav-item active">
             <div class="nav-icon">🏠</div>
             <span>Home</span>
         </a>
@@ -179,6 +187,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyCoBw6-MTBXtIJPEvP9qB7I3JFpJ7MZM5I",
@@ -192,94 +201,157 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app);
+    const db = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+            tabManager: persistentMultipleTabManager()
+        })
+    });
 
     let userPurchasedExams = {};
-
-    // ⚙️ আপনার মূল অ্যাডমিন জিমেইল আইডিটি এখানে সেট করে দেওয়া হলো
     const ADMIN_EMAIL = "amit089das@gmail.com"; 
-// ⚡ লোকাল স্টোরেজ থেকে সাথে সাথে নাম লোড করার লজিক
-const cachedName = localStorage.getItem('user_name');
-if (cachedName) {
-    document.getElementById('user-name').innerText = cachedName;
-    document.getElementById('user-avatar').innerText = cachedName.charAt(0).toUpperCase();
-}
+
+    (function renderInstantly() {
+        const cachedName = localStorage.getItem('user_name');
+        if (cachedName) {
+            document.getElementById('user-name').innerText = cachedName;
+            document.getElementById('user-avatar').innerText = cachedName.charAt(0).toUpperCase();
+        }
+
+        let lastUserUid = localStorage.getItem('current_user_uid');
+        if (!lastUserUid) {
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('user_data_')) {
+                    lastUserUid = key.replace('user_data_', '');
+                    localStorage.setItem('current_user_uid', lastUserUid);
+                    break;
+                }
+            }
+        }
+        
+        if (lastUserUid) {
+            const cachedData = localStorage.getItem(`user_data_${lastUserUid}`);
+            if (cachedData) {
+                const userData = JSON.parse(cachedData);
+                console.log("Dashboard:লোকাল স্টোরেজ থেকে ডেটা লোড হয়েছে (ফ্রি রিড)!");
+                userPurchasedExams = userData.purchasedExams || {};
+                
+                updateExamButtons();
+                setupButtonListeners();
+                document.getElementById('main-exam-grid').style.opacity = "1";
+                
+                const isAnyExamPurchased = Object.values(userPurchasedExams).includes(true);
+                if (isAnyExamPurchased) {
+                    const userProgress = userData.progress || 0;
+                    document.getElementById('syllabus-progress-card').style.display = "block";
+                    document.getElementById('progress-text').innerText = userProgress + "%";
+                    document.getElementById('progress-bar').style.width = userProgress + "%";
+                }
+            }
+        } else {
+            setTimeout(() => {
+                document.getElementById('main-exam-grid').style.opacity = "1";
+            }, 200);
+        }
+    })();
 
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
             window.location.href = "login.html";
         } else {
+            localStorage.setItem('current_user_uid', user.uid);
             try {
-                // 🛠️ অ্যাডমিন প্যানেল বাটন দেখানোর লজিক
                 if (user.email === ADMIN_EMAIL) {
                     const adminBtn = document.getElementById('btn-admin-panel');
-                    if (adminBtn) {
-                        adminBtn.style.display = "block";
-                    }
+                    if (adminBtn) adminBtn.style.display = "block";
                 }
 
+                // ফায়ারবেস থেকে লাইভ রিয়েল-টাইম ডেটা সিঙ্ক করা
                 const userDocRef = doc(db, "users", user.uid);
                 const userDocSnap = await getDoc(userDocRef);
 
                 if (userDocSnap.exists()) {
-    const userData = userDocSnap.data();
-    const finalName = userData.name || user.displayName || "User";
-    
-    // ব্রাউজারে নাম সেভ করে রাখা হচ্ছে ভবিষ্যতের জন্য
-    localStorage.setItem('user_name', finalName);
-
-    // স্ক্রিনে ডাটা দেখানো হচ্ছে
-    document.getElementById('user-name').innerText = finalName;
-    document.getElementById('user-avatar').innerText = finalName.charAt(0).toUpperCase();
-
-
-                    userPurchasedExams = userData.purchasedExams || {};
-                    
-                    // 📊 প্রোগ্রেস বার লজিক
-                    const isAnyExamPurchased = Object.values(userPurchasedExams).includes(true);
-                    const userProgress = userData.progress !== undefined ? userData.progress : 0; 
-
-                    if (isAnyExamPurchased) {
-                        document.getElementById('syllabus-progress-card').style.display = "block";
-                        document.getElementById('progress-text').innerText = userProgress + "%";
-                        document.getElementById('progress-bar').style.width = userProgress + "%";
-                    } else {
-                        document.getElementById('syllabus-progress-card').style.display = "none";
-                    }
+                    const userData = userDocSnap.data();
+                    localStorage.setItem(`user_data_${user.uid}`, JSON.stringify(userData));
+                    processUserData(userData, user);
                 }
-
-                updateExamButtons();
 
             } catch (error) {
                 console.error("Error loading user data:", error);
+                document.getElementById('main-exam-grid').style.opacity = "1";
             }
         }
     });
+
+    function processUserData(userData, user) {
+        const finalName = userData.name || user.displayName || "User";
+        localStorage.setItem('user_name', finalName);
+
+        document.getElementById('user-name').innerText = finalName;
+        document.getElementById('user-avatar').innerText = finalName.charAt(0).toUpperCase();
+
+        userPurchasedExams = userData.purchasedExams || {};
+        
+        const isAnyExamPurchased = Object.values(userPurchasedExams).includes(true);
+        const userProgress = userData.progress !== undefined ? userData.progress : 0; 
+
+        if (isAnyExamPurchased) {
+            document.getElementById('syllabus-progress-card').style.display = "block";
+            document.getElementById('progress-text').innerText = userProgress + "%";
+            document.getElementById('progress-bar').style.width = userProgress + "%";
+        } else {
+            document.getElementById('syllabus-progress-card').style.display = "none";
+        }
+
+        updateExamButtons();
+        setupButtonListeners();
+        document.getElementById('main-exam-grid').style.opacity = "1";
+    }
 
     function updateExamButtons() {
         document.querySelectorAll('.exam-btn').forEach(button => {
             const examKey = button.getAttribute('data-exam');
             if (examKey === 'free_test') return;
 
-            if (userPurchasedExams[examKey] === true) {
-                const badge = button.querySelector('.premium-badge');
-                if (badge) {
+            const badge = button.querySelector('.premium-badge');
+            if (badge) {
+                if (userPurchasedExams[examKey] === true) {
                     badge.innerHTML = "✅ ACTIVE";
                     badge.style.background = "rgba(46, 204, 113, 0.15)";
                     badge.style.color = "#2ecc71";
                     badge.style.borderColor = "rgba(46, 204, 113, 0.3)";
+                } else {
+                    badge.innerHTML = "👑 🔒";
+                    badge.style.background = "rgba(241, 196, 15, 0.15)";
+                    badge.style.color = "#f1c40f";
+                    badge.style.borderColor = "rgba(241, 196, 15, 0.3)";
                 }
             }
         });
     }
 
-    function checkAccess(examKey) {
+    // ⚡ [Instant Access Logic] - নেটওয়ার্ক কলের জন্য অপেক্ষা না করে সাথে সাথে রিডাইরেক্ট করবে
+    window.checkAccess = function(examKey) {
         if (examKey === "free_test") {
             window.location.href = `freetest.html?exam=${examKey}`;
             return;
         }
 
-        if (userPurchasedExams[examKey] === true) {
+        // লোকাল ক্যাশ মেমোরি থেকে ইনস্ট্যান্ট ভেরিফিকেশন করা হচ্ছে
+        const currentUid = localStorage.getItem('current_user_uid');
+        let localPurchased = userPurchasedExams;
+        
+        if (currentUid) {
+            const localDataStr = localStorage.getItem(`user_data_${currentUid}`);
+            if (localDataStr) {
+                const parsed = JSON.parse(localDataStr);
+                if (parsed && parsed.purchasedExams) {
+                    localPurchased = parsed.purchasedExams;
+                }
+            }
+        }
+
+        if (localPurchased[examKey] === true) {
             window.location.href = `mocktestcomming.html?exam=${examKey}`;
         } else {
             let price = "10";
@@ -293,23 +365,31 @@ if (cachedName) {
         }
     }
 
-    document.querySelectorAll('.exam-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const examKey = this.getAttribute('data-exam');
-            checkAccess(examKey);
+    function setupButtonListeners() {
+        document.querySelectorAll('.exam-btn').forEach(button => {
+            button.replaceWith(button.cloneNode(true)); 
         });
-    });
 
-        document.getElementById('btn-logout').addEventListener('click', () => {
-        if(confirm("আপনি কি নিশ্চিতভাবে লগআউট করতে চান?")) {
-            // ⚡ লগআউট করার সময় লোকাল স্টোরেজ ক্লিয়ার করার নতুন লাইন
-            localStorage.removeItem('user_name'); 
-            
-            signOut(auth).then(() => { window.location.href = "login.html"; });
-        }
-    });
+        document.querySelectorAll('.exam-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const examKey = this.getAttribute('data-exam');
+                window.checkAccess(examKey);
+            });
+        });
+    }
 
-    // ⚙️ অ্যাডমিন বাটনে ক্লিক করলে admin.html পেজে নিয়ে যাওয়ার ইভেন্ট লিসেনার
+    const logoutBtn = document.getElementById('btn-logout');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            if(confirm("আপনি কি নিশ্চিতভাবে লগআউট করতে চান?")) {
+                localStorage.clear(); 
+                signOut(auth).then(() => { 
+                    window.location.href = "login.html"; 
+                }).catch(error => console.error("Logout Error:", error));
+            }
+        });
+    }
+
     const adminPanelBtn = document.getElementById('btn-admin-panel');
     if (adminPanelBtn) {
         adminPanelBtn.addEventListener('click', () => {

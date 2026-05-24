@@ -45,7 +45,7 @@
     </div>
 
     <div class="tabs">
-        <div class="tab active" id="tab-wbp_free_mock">Exam</div>
+        <div class="tab active" id="tab-wbp_free_mock">EXAM</div>
         <div class="tab" id="tab-pyp">PYQ</div>
         <div class="tab" id="tab-subject">Subject Test</div>
         <div class="tab" id="tab-current">Current Affairs</div>
@@ -83,28 +83,48 @@
             initFreeTestPortal();
         };
 
+        // ⚡ [Instant Local Data Read Enabled]
         async function initFreeTestPortal() {
-            container.innerHTML = '<p style="color:#aaa; padding:15px;">মক টেস্টের ডেটা লোড হচ্ছে...</p>';
-            
             const urlParams = new URLSearchParams(window.location.search);
             const currentExamKey = urlParams.get('exam') || 'free_test';
 
+            // ১. নেটওয়ার্ক রিকোয়েস্টের আগেই ক্যাশ করা ডেটা লোকাল স্টোরেজ থেকে ইনস্ট্যান্টলি রেন্ডার হবে
+            const cachedJSON = localStorage.getItem(`cache_json_${currentExamKey}`);
+            if (cachedJSON) {
+                try {
+                    data = JSON.parse(cachedJSON);
+                    switchCategory('wbp_free_mock', document.getElementById('tab-wbp_free_mock'));
+                    console.log("FreeTest: লোকাল ক্যাশ থেকে ইনস্ট্যান্ট ডেটা রিড হয়েছে!");
+                } catch(e) {
+                    console.error("Cache parse error", e);
+                }
+            } else {
+                container.innerHTML = '<p style="color:#aaa; padding:15px;">মক টেস্টের ডেটা লোড হচ্ছে...</p>';
+            }
+
             try {
-                // আপনার অরিজিনাল JSON ফাইল ফেচ করার কোড
+                // ২. ব্যাকগ্রাউন্ডে নেটওয়ার্ক থেকে লেটেস্ট ফাইলটি নামানো হচ্ছে
                 const response = await fetch(`./data/${currentExamKey}.json`);
                 
                 if (!response.ok) {
                     throw new Error("JSON file could not be fetched.");
                 }
 
-                data = await response.json(); 
+                const freshData = await response.json(); 
 
-                // ডেটা আসার পর wbp_free_mock ওপেন হবে
-                switchCategory('wbp_free_mock', document.getElementById('tab-wbp_free_mock'));
+                // ৩. যদি ক্যাশ করা ডেটার সাথে নতুন ডেটার কোনো পার্থক্য থাকে, তবেই স্ক্রিন আপডেট হবে (ফ্লিকারিং বন্ধ করতে)
+                if (JSON.stringify(data) !== JSON.stringify(freshData)) {
+                    data = freshData;
+                    localStorage.setItem(`cache_json_${currentExamKey}`, JSON.stringify(freshData)); // নতুন ডেটা ক্যাশ হলো
+                    switchCategory('wbp_free_mock', document.getElementById('tab-wbp_free_mock'));
+                }
 
             } catch (error) {
                 console.error("Error loading JSON data: ", error);
-                container.innerHTML = '<p style="color:#e74c3c; padding:15px;">দুঃখিত, মক টেস্টের ডেটা লোড করা যায়নি। অনুগ্রহ করে ফাইল পাথ চেক করুন।</p>';
+                // যদি আগে থেকে কোনো ক্যাশ ডেটা না থাকে এবং নেটওয়ার্কও ফেইল করে, তখনই কেবল এরর দেখাবে
+                if (!data) {
+                    container.innerHTML = '<p style="color:#e74c3c; padding:15px;">দুঃখিত, মক টেস্টের ডেটা লোড করা যায়নি। অনুগ্রহ করে ফাইল পাথ চেক করুন।</p>';
+                }
             }
         }
 
@@ -211,7 +231,6 @@
             }
         }
 
-        // ইভেন্ট লিসেনারে tab-mock এর জায়গায় tab-wbp_free_mock বসানো হয়েছে
         document.getElementById('tab-wbp_free_mock').addEventListener('click', (e) => switchCategory('wbp_free_mock', e.target));
         document.getElementById('tab-pyp').addEventListener('click', (e) => switchCategory('pyp', e.target));
         document.getElementById('tab-subject').addEventListener('click', (e) => switchCategory('subject', e.target));
@@ -221,6 +240,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
 
         const firebaseConfig = {
             apiKey: "AIzaSyCoBw6-MTBXtIJPEvP9qB7I3JFpJ7MZM5I",
@@ -234,9 +255,15 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = initializeFirestore(app, {
+          localCache: persistentLocalCache({
+            tabManager: persistentMultipleTabManager()
+          })
+        });
 
         document.getElementById('btn-logout').addEventListener('click', () => {
             if(confirm("আপনি কি নিশ্চিতভাবে লগআউট করতে চান?")) {
+                localStorage.clear(); 
                 signOut(auth).then(() => { window.location.href = "login.html"; });
             }
         });

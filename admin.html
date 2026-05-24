@@ -1,363 +1,215 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Mock Test Portal</title>
-    <style>
-        body { font-family: sans-serif; background-color: #121212; color: white; margin: 0; padding: 20px; }
-        .admin-container { max-width: 1000px; margin: 0 auto; }
-        h1 { color: #2ecc71; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .stats-box { display: flex; gap: 20px; margin-bottom: 20px; }
-        .stat-card { background: #1e1e1e; padding: 15px 25px; border-radius: 8px; flex: 1; border-left: 5px solid #2ecc71; cursor: pointer; transition: transform 0.2s; }
-        .stat-card:hover { transform: translateY(-3px); background: #252525; }
-        .stat-card h3 { margin: 0; color: #aaa; font-size: 14px; }
-        .stat-card p { margin: 5px 0 0 0; font-size: 24px; font-weight: bold; }
-        
-        /* সার্চ বক্স স্টাইল */
-        .search-container { margin: 15px 0; display: none; }
-        .search-box { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 4px; box-sizing: border-box; }
-        
-        table { width: 100%; border-collapse: collapse; background: #1e1e1e; border-radius: 8px; overflow: hidden; margin-top: 20px; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #333; }
-        th { background-color: #2a2a2a; color: #2ecc71; }
-        tr:hover { background: #252525; }
-        .progress-bg { background: #333; width: 100px; height: 10px; border-radius: 5px; display: inline-block; overflow: hidden; vertical-align: middle; }
-        .progress-bar { background: #3498db; height: 100%; width: 0%; }
-        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
-        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #2ecc71; }
-        input:checked + .slider:before { transform: translateX(20px); }
-        
-        .btn-action { color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 5px; }
-        .btn-edit { background: #3498db; }
-        .btn-edit:hover { background: #2980b9; }
-        .btn-delete { background: #e74c3c; }
-        .btn-delete:hover { background: #c0392b; }
-        #loading { text-align: center; font-size: 18px; color: #aaa; margin-top: 50px; }
-        
-        .section-title { margin-top: 30px; color: #2ecc71; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Secure Admin Panel</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+*{ margin:0; padding:0; box-sizing:border-box; font-family:Arial, sans-serif; }
+body{ background:#f4f4f4; padding:20px; }
+.container{ max-width:1100px; margin:auto; }
+h1{ text-align:center; margin-bottom:25px; color:#333; }
+.stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:20px; margin-bottom:30px; }
+.card{ background:white; padding:25px; border-radius:15px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,0.08); }
+.card h2{ font-size:35px; color:#007bff; margin-bottom:10px; }
+.search-box{ display:flex; gap:10px; margin-bottom:25px; }
+.search-box input{ flex:1; padding:14px; border:1px solid #ccc; border-radius:10px; outline:none; font-size:16px; }
+.search-box button{ padding:14px 25px; border:none; border-radius:10px; background:#007bff; color:white; cursor:pointer; font-weight:bold; font-size:16px; }
+.search-box button:hover{ background:#0056b3; }
+.user-card{ background:white; padding:25px; border-radius:15px; box-shadow:0 2px 10px rgba(0,0,0,0.08); }
+.user-card p{ margin-bottom:12px; font-size:16px; color:#444; }
+.exam-status-list { margin: 15px 0; background: #fafafa; padding: 15px; border-radius: 10px; border: 1px solid #eee; }
+.buttons{ display:flex; flex-wrap:wrap; gap:10px; margin-top:20px; }
+.buttons button{ padding:11px 16px; border:none; border-radius:8px; color:white; cursor:pointer; font-weight:bold; font-size:14px; }
+.active{ background:#2ecc71; }
+.active:hover{ background:#27ae60; }
+.block{ background:#e74c3c; }
+.block:hover{ background:#c0392b; }
+.loading{ text-align:center; margin-top:100px; font-size:22px; color:#666; }
+.denied{ text-align:center; margin-top:100px; color:red; font-size:24px; font-weight:bold; }
+.logout-btn{ background:black; color:white; border:none; padding:10px 18px; border-radius:10px; cursor:pointer; margin-bottom:20px; font-weight:bold; }
+</style>
 </head>
 <body>
 
-<div class="admin-container" id="admin-content" style="display: none;">
-    <h1>অ্যাডমিন প্যানেল ড্যাশবোর্ড</h1>
-    
-    <div class="stats-box">
-        <div class="stat-card" id="btn-all-users">
-            <h3>মোট রেজিস্টার্ড ইউজার (ক্লিক করুন)</h3>
-            <p id="total-users">0</p>
-        </div>
-        <div class="stat-card" style="border-left-color: #f1c40f;" id="btn-paid-users">
-            <h3>মোট পারচেজ (প্রিমিয়াম ইউজার - ক্লিক করুন)</h3>
-            <p id="total-purchased">0</p>
-        </div>
-    </div>
-
-    <div class="search-container" id="search-area">
-        <input type="text" id="search-input" class="search-box" placeholder="নাম অথবা ইমেল দিয়ে ইউজার খুঁজুন...">
-    </div>
-
-    <h3 id="table-title" class="section-title">ইউজার তালিকা ও পারমিশন কন্ট্রোল (গত ২ দিনের রিসেন্ট অ্যাক্টিভিটি)</h3>
-    
-    <table>
-        <thead>
-            <tr id="table-headers">
-                </tr>
-        </thead>
-        <tbody id="user-table-body">
-        </tbody>
-    </table>
+<div id="app">
+  <div class="loading">Checking Admin Access...</div>
 </div>
 
-<div id="loading">সিকিউরিটি চেক করা হচ্ছে...</div>
+<script>
+// ================= FIREBASE CONFIG =================
+const firebaseConfig = {
+  apiKey: "AIzaSyCoBw6-MTBXtIJPEvP9qB7I3JFpJ7MZM5I",
+  authDomain: "mocktest0.firebaseapp.com",
+  projectId: "mocktest0",
+};
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const app = document.getElementById("app");
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyCoBw6-MTBXtIJPEvP9qB7I3JFpJ7MZM5I",
-        authDomain: "mocktest0.firebaseapp.com",
-        projectId: "mocktest0",
-        storageBucket: "mocktest0.firebasestorage.app",
-        messagingSenderId: "251833325363",
-        appId: "1:251833325363:web:8bdd09a4b717bf045e9046",
-        measurementId: "G-6P2P3WS42H"
-    };
+// ================= ADMIN EMAIL =================
+const ADMIN_EMAIL = "amit089das@gmail.com";
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+// ================= AUTH CHECK =================
+auth.onAuthStateChanged(async(user)=>{
+  if(!user){
+    app.innerHTML = `<div class="denied">Please Login First</div>`;
+    return;
+  }
+  if(user.email !== ADMIN_EMAIL){
+    app.innerHTML = `<div class="denied">Access Denied: You are not authorized!</div>`;
+    return;
+  }
+  loadAdminPanel();
+});
 
-    const ADMIN_EMAIL = "amit089das@gmail.com"; 
+// ================= LOAD PANEL =================
+function loadAdminPanel(){
+  app.innerHTML = `
+  <div class="container">
+    <button class="logout-btn" onclick="logout()">Logout</button>
+    <h1>Admin Control Dashboard</h1>
+    <div class="stats">
+      <div class="card"><h2 id="totalUsers">0</h2><p>Total Users</p></div>
+      <div class="card"><h2 id="paidUsers">0</h2><p>Paid Users</p></div>
+      <div class="card"><h2 id="totalPurchases">0</h2><p>Total Purchases</p></div>
+    </div>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search by Full Name, Mobile No, or Email ID">
+      <button onclick="searchUser()">Search User</button>
+    </div>
+    <div id="userResult"></div>
+  </div>
+  `;
+  loadStats();
+}
+
+// ================= LOAD STATS =================
+async function loadStats(){
+  try{
+    const statsDoc = await db.collection("adminStats").doc("summary").get();
+    if(statsDoc.exists){
+      const data = statsDoc.data();
+      document.getElementById("totalUsers").innerText = data.totalUsers || 0;
+      document.getElementById("paidUsers").innerText = data.paidUsers || 0;
+      document.getElementById("totalPurchases").innerText = data.totalPurchases || 0;
+    }
+  }catch(error){
+    console.log("Stats loading error:", error);
+  }
+}
+
+// ================= SEARCH USER =================
+async function searchUser(){
+  const value = document.getElementById("searchInput").value.trim();
+  if(!value){
+    alert("Please enter a name, mobile number or email to search.");
+    return;
+  }
+
+  const resultDiv = document.getElementById("userResult");
+  resultDiv.innerHTML = "<div style='text-align:center; font-size:18px;'>Searching User Information...</div>";
+
+  try{
+    let snapshot = null;
     
-    // ভবিষ্যৎ-এ নতুন মকটেস্ট বাটন বাড়াতে চাইলে শুধু এখানে কী (key) এবং নাম অবজেক্টে যোগ করবেন
-    const EXAM_CATEGORIES = {
-        wb_police: "WB Police",
-        railway: "Railway",
-        wbpsc: "WBPSC"
-        // ssc: "SSC Exam" <-- উদাহরণস্বরূপ পরবর্তীতে এভাবে যোগ করতে পারবেন
-    };
+    // প্রথমে মোবাইল দিয়ে সার্চ
+    snapshot = await db.collection("users").where("mobile","==",value).limit(1).get();
 
-    let allUsersData = []; // সব ইউজারের ক্যাশ ডেটা রাখার জন্য
-    let currentView = "recent"; // ভিউ ট্র্যাক করার জন্য: 'recent', 'all', 'paid'
+    // না পাওয়া গেলে ইমেল দিয়ে সার্চ
+    if(snapshot.empty){
+      snapshot = await db.collection("users").where("email","==",value).limit(1).get();
+    }
+    // না পাওয়া গেলে নাম দিয়ে সার্চ
+    if(snapshot.empty){
+      snapshot = await db.collection("users").where("name","==",value).limit(1).get();
+    }
+    
+    // ইউজার যদি কোনোভাবেই খুঁজে না পাওয়া যায়
+    if(snapshot.empty){
+      resultDiv.innerHTML = `<div class="user-card" style="text-align:center; color:red; font-weight:bold;">No User Found with this Data!</div>`;
+      return;
+    }
 
-    onAuthStateChanged(auth, (user) => {
-        if (user && user.email === ADMIN_EMAIL) {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('admin-content').style.display = 'block';
-            initDashboard();
-        } else {
-            alert("অ্যাক্সেস রিফিউজড! আপনি এই পেজের অ্যাডমিন নন।");
-            window.location.href = "dashboard.html";
-        }
+    snapshot.forEach(doc=>{
+      const user = doc.data();
+      const uid = doc.id;
+      
+      // ড্যাশবোর্ডের সাথে সামঞ্জস্য রেখে purchasedExams অবজেক্ট ব্যবহার করা হয়েছে
+      const purchases = user.purchasedExams || {};
+
+      // 💡 ফলব্যাক মেকানিজম: কোনো এক্সাম অবজেক্টে না থাকলে ডিফল্ট বা স্বয়ংক্রিয়ভাবে লক (false) দেখাবে
+      const wb_police_status = purchases.wb_police === true;
+      const wbpsc_status = purchases.wbpsc === true;
+      const railway_status = purchases.railway === true;
+      const tet_status = purchases.tet === true; 
+
+      resultDiv.innerHTML = `
+        <div class="user-card">
+          <p><strong>User Name:</strong> ${user.name || "N/A"}</p>
+          <p><strong>Mobile No:</strong> ${user.mobile || "N/A"}</p>
+          <p><strong>Email ID:</strong> ${user.email || "N/A"}</p>
+          <p><strong>User UID:</strong> <span style="font-size:12px; color:#888;">${uid}</span></p>
+          
+          <div class="exam-status-list">
+            <h3 style="margin-bottom:10px; font-size:16px; color:#111;">Exam Purchase Status:</h3>
+            <p><strong>1. WB Police Exam Category:</strong> ${wb_police_status ? "<span style='color:#2ecc71;font-weight:bold;'>✅ Active (Unlocked)</span>" : "<span style='color:#e74c3c;font-weight:bold;'>🔒 Blocked (Locked)</span>"}</p>
+            <p><strong>2. WBPSC Exam Category:</strong> ${wbpsc_status ? "<span style='color:#2ecc71;font-weight:bold;'>✅ Active (Unlocked)</span>" : "<span style='color:#e74c3c;font-weight:bold;'>🔒 Blocked (Locked)</span>"}</p>
+            <p><strong>3. Railway Exam Category:</strong> ${railway_status ? "<span style='color:#2ecc71;font-weight:bold;'>✅ Active (Unlocked)</span>" : "<span style='color:#e74c3c;font-weight:bold;'>🔒 Blocked (Locked)</span>"}</p>
+            <p><strong>4. WB TET Exam Category:</strong> ${tet_status ? "<span style='color:#2ecc71;font-weight:bold;'>✅ Active (Unlocked)</span>" : "<span style='color:#e74c3c;font-weight:bold;'>🔒 Blocked (Locked)</span>"}</p>
+          </div>
+
+          <div class="buttons">
+            <button class="active" onclick="toggleExam('${uid}','wb_police',true)">Activate WB Police</button>
+            <button class="block" onclick="toggleExam('${uid}','wb_police',false)">Block WB Police</button>
+
+            <button class="active" onclick="toggleExam('${uid}','wbpsc',true)">Activate WBPSC</button>
+            <button class="block" onclick="toggleExam('${uid}','wbpsc',false)">Block WBPSC</button>
+
+            <button class="active" onclick="toggleExam('${uid}','railway',true)">Activate Railway</button>
+            <button class="block" onclick="toggleExam('${uid}','railway',false)">Block Railway</button>
+
+            <button class="active" onclick="toggleExam('${uid}','tet',true)">Activate TET</button>
+            <button class="block" onclick="toggleExam('${uid}','tet',false)">Block TET</button>
+          </div>
+        </div>
+      `;
     });
 
-    async function initDashboard() {
-        renderTableHeaders();
-        await loadUsersData();
-        setupViewControls();
-    }
+  }catch(error){
+    console.error("Search system crash:", error);
+    resultDiv.innerHTML = `<div class="user-card" style="text-align:center; color:red;">Something went wrong during search!</div>`;
+  }
+}
 
-    // টেবিলের হেডার ডায়নামিকালি তৈরি করার ফাংশন
-    function renderTableHeaders() {
-        const headerRow = document.getElementById('table-headers');
-        let html = `
-            <th>নাম ও ইমেল</th>
-            <th>প্রোগ্রেস</th>
-        `;
-        // এক্সাম ক্যাটাগরিগুলো লুপ করে হেডার তৈরি
-        for (const key in EXAM_CATEGORIES) {
-            html += `<th>${EXAM_CATEGORIES[key]}</th>`;
-        }
-        html += `<th>অ্যাকশন</th>`;
-        headerRow.innerHTML = html;
-    }
+// ================= TOGGLE EXAM =================
+async function toggleExam(uid, examName, status){
+  try{
+    // অবজেক্টের ডট নোটেশন দিয়ে সুনির্দিষ্ট এক্সাম ক্যাটাগরি আপডেট বা অটো-তৈরি করা হচ্ছে
+    await db.collection("users").doc(uid).update({
+      [`purchasedExams.${examName}`]: status
+    });
 
-    async function loadUsersData() {
-        const querySnapshot = await getDocs(collection(db, "users"));
-        allUsersData = [];
-        
-        let totalUsers = 0;
-        let totalPaid = 0;
+    alert("User access updated successfully!");
+    searchUser(); // আপডেট হওয়ার পর ডাটা স্বয়ংক্রিয়ভাবে রিফ্রেশ করবে
+  }catch(error){
+    console.error("Update error:", error);
+    alert("Failed to update user access. Please try again.");
+  }
+}
 
-        querySnapshot.forEach((docSnap) => {
-            totalUsers++;
-            const data = docSnap.data();
-            const userId = docSnap.id;
-            
-            const purchased = data.purchasedExams || {};
-            
-            // যেকোনো একটি এক্সাম কেনা থাকলেই পেইড কাউন্ট হবে
-            let hasPaid = false;
-            for (const key in EXAM_CATEGORIES) {
-                if (purchased[key] === true) {
-                    hasPaid = true;
-                    break;
-                }
-            }
-            if(hasPaid) totalPaid++;
-
-            allUsersData.push({ id: userId, ...data });
-        });
-
-        document.getElementById('total-users').innerText = totalUsers;
-        document.getElementById('total-purchased').innerText = totalPaid;
-
-        // ডিফল্ট হিসেবে রিসেন্ট ইউজারদের তালিকা দেখাবে
-        switchView("recent");
-    }
-
-    // স্ট্যাট বাটন এবং সার্চ ফিল্টারের ইভেন্ট হ্যান্ডলার
-    function setupViewControls() {
-        document.getElementById('btn-all-users').addEventListener('click', () => switchView("all"));
-        document.getElementById('btn-paid-users').addEventListener('click', () => switchView("paid"));
-        
-        document.getElementById('search-input').addEventListener('input', function() {
-            filterAndRenderTable(this.value.toLowerCase());
-        });
-    }
-
-    function switchView(view) {
-        currentView = view;
-        const searchArea = document.getElementById('search-area');
-        const tableTitle = document.getElementById('table-title');
-        document.getElementById('search-input').value = ""; // সার্চ রিসেট
-
-        if (view === "recent") {
-            searchArea.style.display = "none";
-            tableTitle.innerText = "ইউজার তালিকা ও পারমিশন কন্ট্রোল (গত ২ দিনের রিসেন্ট অ্যাক্টিভিটি)";
-        } else if (view === "all") {
-            searchArea.style.display = "block";
-            tableTitle.innerText = "সকল রেজিস্টার্ড ইউজারের তালিকা";
-        } else if (view === "paid") {
-            searchArea.style.display = "none";
-            tableTitle.innerText = "প্রিমিয়াম (পারচেজড) ইউজারদের তালিকা";
-        }
-        filterAndRenderTable("");
-    }
-
-    function filterAndRenderTable(searchTerm) {
-        const tbody = document.getElementById('user-table-body');
-        tbody.innerHTML = "";
-
-        const now = new Date().getTime();
-        const twoDaysInMs = 2 * 24 * 60 * 60 * 1000;
-
-        allUsersData.forEach((user) => {
-            const name = (user.name || 'No Name').toLowerCase();
-            const email = (user.email || '').toLowerCase();
-            const purchased = user.purchasedExams || {};
-            
-            // গত ২ দিনের মধ্যে অ্যাকাউন্ট তৈরি বা লগইন বা অ্যাক্টিভিটি চেক (createdAt/lastLogin ফিল্ড না থাকলে সেফটি হ্যান্ডলিং)
-            const userTime = user.updatedAt || user.createdAt || now; 
-            const isRecent = (now - userTime) <= twoDaysInMs;
-
-            // যেকোনো একটি এক্সাম কেনা আছে কি না পরীক্ষা
-            let hasPaid = false;
-            for (const key in EXAM_CATEGORIES) {
-                if (purchased[key] === true) {
-                    hasPaid = true;
-                    break;
-                }
-            }
-
-            // ভিউ অনুযায়ী ফিল্টারিং লজিক
-            if (currentView === "recent" && !isRecent && !hasPaid) return; 
-            if (currentView === "paid" && !hasPaid) return;
-            if (currentView === "all" && searchTerm && !name.includes(searchTerm) && !email.includes(searchTerm)) return;
-
-            const progressVal = user.progress || 0;
-            const tr = document.createElement('tr');
-            
-            // বেসিক ইনফো কলাম তৈরি
-            let rowHtml = `
-                <td>
-                    <strong>${user.name || 'No Name'}</strong><br>
-                    <span style="font-size:12px; color:#aaa;">${user.email}</span>
-                </td>
-                <td>
-                    <div class="progress-bg"><div class="progress-bar" style="width: ${progressVal}%"></div></div>
-                    <span style="font-size:12px;"> ${progressVal}%</span>
-                </td>
-            `;
-
-            // ডায়নামিকালি এক্সাম সুইচ কলামগুলো তৈরি করা
-            for (const examKey in EXAM_CATEGORIES) {
-                const isChecked = purchased[examKey] || false;
-                rowHtml += `<td>${createSwitch(user.id, examKey, isChecked)}</td>`;
-            }
-
-            // অ্যাকশন কলাম (এডিট ও ডিলিট বাটন সহ)
-            rowHtml += `
-                <td>
-                    <button class="btn-action btn-edit" data-id="${user.id}">এডিট</button>
-                    <button class="btn-action btn-delete" data-id="${user.id}">ডিলিট</button>
-                </td>
-            `;
-
-            tr.innerHTML = rowHtml;
-            tbody.appendChild(tr);
-        });
-
-        addEventListeners();
-    }
-
-    function createSwitch(userId, examKey, isChecked) {
-        return `
-            <label class="switch">
-                <input type="checkbox" class="exam-toggle" data-uid="${userId}" data-exam="${examKey}" ${isChecked ? 'checked' : ''}>
-                <span class="slider"></span>
-            </label>
-        `;
-    }
-
-    function addEventListeners() {
-        // এক্সাম অন/অফ সুইচ লিসেনার
-        document.querySelectorAll('.exam-toggle').forEach(checkbox => {
-            checkbox.replaceWith(checkbox.cloneNode(true)); // ডুপ্লিকেট লিসেনার এড়াতে
-        });
-        
-        document.querySelectorAll('.exam-toggle').forEach(checkbox => {
-            checkbox.addEventListener('change', async function() {
-                const uid = this.getAttribute('data-uid');
-                const exam = this.getAttribute('data-exam');
-                const isTrue = this.checked;
-                const userDocRef = doc(db, "users", uid);
-                
-                try {
-                    await updateDoc(userDocRef, {
-                        [`purchasedExams.${exam}`]: isTrue,
-                        updatedAt: new Date().getTime() // অ্যাক্টিভিটি টাইম ট্র্যাক করার জন্য
-                    });
-                    // লোকাল ক্যাশ আপডেট
-                    const userIdx = allUsersData.findIndex(u => u.id === uid);
-                    if(userIdx !== -1) {
-                        if(!allUsersData[userIdx].purchasedExams) allUsersData[userIdx].purchasedExams = {};
-                        allUsersData[userIdx].purchasedExams[exam] = isTrue;
-                        allUsersData[userIdx].updatedAt = new Date().getTime();
-                    }
-                    console.log(`Updated ${exam} to ${isTrue}`);
-                } catch (error) {
-                    alert("আপডেট করতে সমস্যা হয়েছে: " + error.message);
-                    this.checked = !isTrue;
-                }
-            });
-        });
-
-        // ইউজার এডিট বাটন লিসেনার (নতুন ফিচার)
-        document.querySelectorAll('.btn-edit').forEach(btn => {
-            btn.addEventListener('click', async function() {
-                const uid = this.getAttribute('data-id');
-                const user = allUsersData.find(u => u.id === uid);
-                if(!user) return;
-
-                const newName = prompt("ইউজারের নতুন নাম লিখুন:", user.name || "");
-                if (newName === null) return; // বাতিল করলে
-
-                const newEmail = prompt("ইউজারের নতুন ইমেল লিখুন:", user.email || "");
-                if (newEmail === null) return;
-
-                const newProgress = prompt("ইউজারের প্রোগ্রেস পার্সেন্টেজ লিখুন (0-100):", user.progress || 0);
-                if (newProgress === null) return;
-
-                const progressNum = parseInt(newProgress) || 0;
-
-                try {
-                    await updateDoc(doc(db, "users", uid), {
-                        name: newName,
-                        email: newEmail,
-                        progress: progressNum,
-                        updatedAt: new Date().getTime()
-                    });
-                    alert("ইউজার ডেটা সফলভাবে আপডেট হয়েছে!");
-                    loadUsersData(); // পুরো ড্যাশবোর্ড রিফ্রেশ
-                } catch (error) {
-                    alert("এডিট করতে সমস্যা হয়েছে: " + error.message);
-                }
-            });
-        });
-
-        // ইউজার ডিলিট বাটন লিসেনার
-        document.querySelectorAll('.btn-delete').forEach(btn => {
-            btn.addEventListener('click', async function() {
-                const uid = this.getAttribute('data-id');
-                if(confirm("আপনি কি নিশ্চিতভাবে এই ইউজারকে ডিলিট করতে চান?")) {
-                    try {
-                        await deleteDoc(doc(db, "users", uid));
-                        loadUsersData();
-                    } catch (error) {
-                        alert("ডিলিট করতে সমস্যা হয়েছে: " + error.message);
-                    }
-                }
-            });
-        });
-    }
+// ================= LOGOUT =================
+function logout(){
+  auth.signOut();
+  location.reload();
+}
 </script>
 </body>
 </html>

@@ -60,7 +60,7 @@
             <div class="nav-icon">🏠</div>
             <span>Home</span>
         </a>
-        <a href="mocktestcomming.html" class="nav-item">
+        <a href="mocktestcomming.html" class="nav-item active">
             <div class="nav-icon">📝</div>
             <span>Tests</span>
         </a>
@@ -78,6 +78,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCoBw6-MTBXtIJPEvP9qB7I3JFpJ7MZM5I",
@@ -91,10 +92,43 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
+        const db = initializeFirestore(app, {
+            localCache: persistentLocalCache({
+                tabManager: persistentMultipleTabManager()
+            })
+        });
 
         const urlParams = new URLSearchParams(window.location.search);
         const currentExamKey = urlParams.get('exam');
+
+        // ⚡ [Instant Local Cache Render] - ইউজার 'Tests' বাটনে ক্লিক করলে ১ মিলি-সেকেন্ডে কেনা এক্সাম দেখাবে
+        (function renderInstantly() {
+            if (!currentExamKey) {
+                document.getElementById('main-tabs').style.display = 'none'; 
+                document.getElementById('exam-title').innerText = "আপনার কেনা এক্সাম সমূহ"; 
+                document.getElementById('exam-desc').innerText = "যে ক্যাটাগরিগুলো আপনি কিনেছেন, সেগুলো নিচে দেওয়া হলো।"; 
+
+                let lastUserUid = null;
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('user_data_')) {
+                        lastUserUid = key.replace('user_data_', '');
+                        break;
+                    }
+                }
+                if (lastUserUid) {
+                    const cachedData = localStorage.getItem(`user_data_${lastUserUid}`);
+                    if (cachedData) {
+                        const userData = JSON.parse(cachedData);
+                        console.log("mocktestcoming:লোকাল স্টোরেজ থেকে ডেটা লোড হয়েছে (ফ্রি রিড)!");
+                        // আপনার অরিজিনাল গ্লোবাল ফাংশন কল করা হচ্ছে এরর ছাড়া রেন্ডার করার জন্য
+                        if (window.renderPurchasedExamsList) {
+                            window.renderPurchasedExamsList(userData);
+                        }
+                    }
+                }
+            }
+        })();
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) { 
@@ -113,64 +147,79 @@
 
         async function showPurchasedExams(uid) {
             const container = document.getElementById('list-container'); 
-            container.innerHTML = '<p style="color:#aaa; padding:15px;">আপনার প্রোফাইল চেক করা হচ্ছে...</p>'; 
+            // যদি অলরেডি ক্যাশ থেকে ডেটা রেন্ডার হয়ে থাকে, তবে "চেক করা হচ্ছে" টেক্সট দেখিয়ে ফ্লিকার করব না
+            if (container.children.length === 0) {
+                container.innerHTML = '<p style="color:#aaa; padding:15px;">আপনার প্রোফাইল চেক করা হচ্ছে...</p>'; 
+            }
             
             try {
                 const userDoc = await getDoc(doc(db, "users", uid)); 
-                const userData = userDoc.data(); 
-                container.innerHTML = ''; 
-
-                const examNames = {
-                    "wb_police": "👮 WB Police Premium Course", 
-                    "wbpsc": "🏛️ WBPSC Premium Course", 
-                    "railway": "🚂 Railway Premium Course" 
-                };
-
-                let hasPurchased = false;
-
-                if (userData && userData.purchasedExams) {
-                    Object.keys(userData.purchasedExams).forEach(examKey => {
-                        if (userData.purchasedExams[examKey] === true) {
-                            hasPurchased = true;
-                            const item = document.createElement('div'); 
-                            item.className = 'list-item'; 
-                            item.innerHTML = `<span>${examNames[examKey] || examKey} (Unlocked)</span><span style="color:#2ecc71;">প্রবেশ করুন ➔</span>`; 
-                            item.onclick = () => {
-                                window.location.href = `mocktestcomming.html?exam=${examKey}`; 
-                            };
-                            container.appendChild(item); 
-                        }
-                    });
-                }
-
-                if (!hasPurchased) {
-                    container.innerHTML = '<p style="color:#aaa; padding:15px;">আপনি এখনো কোনো এক্সাম ক্যাটাগরি কেনেননি। ড্যাশবোর্ড থেকে পছন্দমতো ক্যাটাগরি কিনতে পারেন।</p>'; 
+                if (userDoc.exists()) {
+                    const userData = userDoc.data(); 
+                    localStorage.setItem(`user_data_${uid}`, JSON.stringify(userData)); // ক্যাশ আপডেট করা হলো
+                    if (window.renderPurchasedExamsList) {
+                        window.renderPurchasedExamsList(userData);
+                    }
                 }
             } catch(e) {
                 console.error(e);
-                container.innerHTML = '<p style="color:#aaa; padding:15px;">লোডিং ত্রুটি হয়েছে।</p>';
+                if (container.children.length === 0) {
+                    container.innerHTML = '<p style="color:#aaa; padding:15px;">লোডিং ত্রুটি হয়েছে।</p>';
+                }
             }
         }
 
         document.getElementById('btn-logout').addEventListener('click', () => {
             if(confirm("আপনি কি নিশ্চিতভাবে লগআউট করতে চান?")) {
+                localStorage.clear();
                 signOut(auth).then(() => { window.location.href = "login.html"; }); 
             }
         });
 
-        // নীচের সাধারণ স্ক্রিপ্টের ফাংশনটিকে মডিউল স্কোপে অ্যাক্সেস দেওয়ার জন্য গ্লোবাল উইন্ডোতে বাইন্ড করা হলো
         window.initTestPortal = initTestPortal;
     </script>
 
     <script>
         let data = null; // গ্লোবাল ডেটা হোল্ডার যা ফাইল থেকে আসবে
         
+        // কেনা এক্সামগুলোর লিস্ট তৈরি করার অরিজিনাল লজিককে সেফ ফাংশনে কনভার্ট করা হলো
+        window.renderPurchasedExamsList = function(userData) {
+            const container = document.getElementById('list-container'); 
+            container.innerHTML = ''; 
+
+            const examNames = {
+                "wb_police": "👮 WB Police Premium Course", 
+                "wbpsc": "🏛️ WBPSC Premium Course", 
+                "railway": "🚂 Railway Premium Course" 
+            };
+
+            let hasPurchased = false;
+
+            if (userData && userData.purchasedExams) {
+                Object.keys(userData.purchasedExams).forEach(examKey => {
+                    if (userData.purchasedExams[examKey] === true) {
+                        hasPurchased = true;
+                        const item = document.createElement('div'); 
+                        item.className = 'list-item'; 
+                        item.innerHTML = `<span>${examNames[examKey] || examKey} (Unlocked)</span><span style="color:#2ecc71;">প্রবেশ করুন ➔</span>`; 
+                        item.onclick = () => {
+                            window.location.href = `mocktestcomming.html?exam=${examKey}`; 
+                        };
+                        container.appendChild(item); 
+                    }
+                });
+            }
+
+            if (!hasPurchased) {
+                container.innerHTML = '<p style="color:#aaa; padding:15px;">আপনি এখনো কোনো এক্সাম ক্যাটাগরি কেনেননি। ড্যাশবোর্ড থেকে পছন্দমতো ক্যাটাগরি কিনতে পারেন।</p>'; 
+            }
+        };
+
         async function initTestPortal() {
             const urlParams = new URLSearchParams(window.location.search); 
             const currentExamKey = urlParams.get('exam'); 
 
             const container = document.getElementById('list-container'); 
-            container.innerHTML = '<p style="color:#aaa; padding:15px;">মক টেস্টের ডেটা লোড হচ্ছে...</p>';
 
             const examNames = {
                 "wb_police": "WB Police Mock Test", 
@@ -182,22 +231,34 @@
             document.getElementById('exam-title').innerText = examNames[currentExamKey] || "Online Mock Test"; 
             document.getElementById('exam-desc').innerText = "আপনার পছন্দের ক্যাটাগরি বেছে নিয়ে মক টেস্ট শুরু করুন।";
 
+            // ⚡ [Instant JSON Cache] - টেস্ট পোর্টালের ভেতরের সাব-ফোল্ডার ডেটাও ক্যাশ থেকে আসবে
+            const cachedJSON = localStorage.getItem(`cache_json_${currentExamKey}`);
+            if (cachedJSON) {
+                try {
+                    data = JSON.parse(cachedJSON);
+                    loadList('mock', document.getElementById('tab-mock'));
+                } catch(e) { console.error(e); }
+            } else {
+                container.innerHTML = '<p style="color:#aaa; padding:15px;">মক টেস্টের ডেটা লোড হচ্ছে...</p>';
+            }
+
             try {
-                // ডাইনামিকালি সঠিক JSON ফাইলটি ফোল্ডার থেকে ফেচ করা হচ্ছে (যেমন: ./data/wb_police.json)
                 const response = await fetch(`./data/${currentExamKey}.json`);
-                
-                if (!response.ok) {
-                    throw new Error("JSON file could not be fetched.");
+                if (!response.ok) throw new Error("JSON file could not be fetched.");
+
+                const freshData = await response.json(); 
+
+                if (JSON.stringify(data) !== JSON.stringify(freshData)) {
+                    data = freshData;
+                    localStorage.setItem(`cache_json_${currentExamKey}`, JSON.stringify(freshData));
+                    loadList('mock', document.getElementById('tab-mock')); 
                 }
-
-                data = await response.json(); // ফেচ করা ডেটা ভেরিয়েবলে অ্যাসাইন হলো
-
-                // ডেটা সফলভাবে এসে গেলে প্রথম ক্যাটাগরি ডিফল্টভাবে রেন্ডার হবে
-                loadList('mock', document.getElementById('tab-mock')); 
 
             } catch (error) {
                 console.error("Error loading JSON data: ", error);
-                container.innerHTML = '<p style="color:#e74c3c; padding:15px;">দুঃখিত, মক টেস্টের ডেটা লোড করা যায়নি। অনুগ্রহ করে পরে চেষ্টা করুন বা ফাইল পাথ চেক করুন।</p>';
+                if (!data) {
+                    container.innerHTML = '<p style="color:#e74c3c; padding:15px;">দুঃখিত, মক টেস্টের ডেটা লোড করা যায়নি। অনুগ্রহ করে পরে চেষ্টা করুন বা ফাইল পাথ চেক করুন।</p>';
+                }
             }
         }
 
@@ -213,7 +274,6 @@
                 return; 
             }
             
-            // ছোট বা বড় হাতের অক্ষরে ডাটা ম্যাচিং সিকিউরিটি
             let categoryData = data[categoryType]; 
             if (!categoryData) {
                 categoryData = data[categoryType.toUpperCase()] || data[categoryType.toLowerCase()];
@@ -249,7 +309,6 @@
             const itemCard = document.createElement('div');
             itemCard.className = 'test-item-card';
             
-            // চেক করা হচ্ছে টেস্টের লিংক আছে নাকি ফাঁকা/Coming Soon রাখা হয়েছে
             const isComingSoon = !mockObject.link || mockObject.link.trim() === "" || mockObject.link.toLowerCase() === "coming soon";
             
             const buttonHtml = isComingSoon 
@@ -324,7 +383,6 @@
             mockArray.forEach(mockObject => { renderFinalTestItem(mockObject); }); 
         }
 
-        // ট্যাব ক্লিক লিসেনার ম্যাপ
         document.getElementById('tab-mock').addEventListener('click', (e) => loadList('mock', e.target)); 
         document.getElementById('tab-pyp').addEventListener('click', (e) => loadList('pyp', e.target)); 
         document.getElementById('tab-subject').addEventListener('click', (e) => loadList('subject', e.target)); 
