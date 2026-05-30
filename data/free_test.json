@@ -106,6 +106,13 @@
       { "name": "Percentage Mock 4", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
       { "name": "Percentage Mock 5", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" }
     ]
+    },
+    "reasoning": {
+      "Order & Ranking": [
+        { "name": "Order & Ranking Mock 1", "link": "Mocktestformat.html?testfile=Subject_test/Reasoning/oder_ranking/oder_ranking_1", "totalQ": 100, "time": "30 Min" },
+        { "name": "Order & Ranking Mock 2", "link": "Mocktestformat.html?testfile=Subject_test/Reasoning/oder_ranking/oder_ranking_2", "totalQ": 100, "time": "30 Min" }
+        
+      ]
     }
   },
   "current": {}
