@@ -159,7 +159,7 @@
             <div class="premium-badge" style="background: rgba(46, 204, 113, 0.15); color: #2ecc71; border-color: rgba(46, 204, 113, 0.3);">🎁 FREE</div>
             <div class="card-icon">📚</div>
             <h4 class="card-title">Free Test Exam</h4>
-            <div class="card-price">₹0</div>
+            <div class="card-price">Active</div>
         </div>
     </div>
 
@@ -319,18 +319,29 @@
             if (examKey === 'free_test') return;
 
             const badge = button.querySelector('.premium-badge');
-            if (badge) {
-                if (userPurchasedExams[examKey] === true) {
-                    badge.innerHTML = "✅ ACTIVE";
-                    badge.style.background = "rgba(46, 204, 113, 0.15)";
-                    badge.style.color = "#2ecc71";
-                    badge.style.borderColor = "rgba(46, 204, 113, 0.3)";
-                } else {
+            const priceTag = button.querySelector('.card-price');
+            
+            // ডিফল্ট প্রাইস ভ্যালু সেট করার জন্য (যদি আগে অ্যাক্টিভ থেকে আবার লকড হয়)
+            let defaultPrice = "10";
+            if (examKey === "wbpsc") defaultPrice = "15";
+            else if (examKey === "railway") defaultPrice = "20";
+
+            if (userPurchasedExams[examKey] === true) {
+                // এক্সাম অ্যাক্টিভ হলে মাথায় প্রিমিয়াম ব্যাজটি সম্পূর্ণ হাইড বা রিমুভ করে দেওয়া হলো
+                if (badge) badge.style.display = "none";
+                
+                // নিচের প্রাইস ট্যাগের জায়গায় 'Active' লেখা দেখাবে
+                if (priceTag) priceTag.innerHTML = "Active";
+            } else {
+                // এক্সাম কেনা না থাকলে আগের মতো লক থাকবে এবং প্রাইস দেখাবে
+                if (badge) {
+                    badge.style.display = "flex";
                     badge.innerHTML = "👑 🔒";
                     badge.style.background = "rgba(241, 196, 15, 0.15)";
                     badge.style.color = "#f1c40f";
                     badge.style.borderColor = "rgba(241, 196, 15, 0.3)";
                 }
+                if (priceTag) priceTag.innerHTML = "₹" + defaultPrice;
             }
         });
     }
