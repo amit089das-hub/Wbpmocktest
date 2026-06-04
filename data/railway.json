@@ -9,6 +9,12 @@
     ]
   },
   "current": {},
-  "pyp": {},
+  "pyp": {
+      "Group D": {
+        "2025": [
+          { "name": "27_Nov_2025_1shift", "link": "Mocktestformat.html?testfile=Railway_QS/Railway_Group_D_2025/27_Nov_2025_1shift_reaasoing", "totalQ": 30, "time": "30 Min"}
+        ]
+      }
+  },
   "subject": {}
 }
