@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Exam Categories</title>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#121212">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: sans-serif; 
+            background-color: #121212; 
+            color: #ffffff; 
+            margin: 0; 
+            padding: 20px 15px 90px 15px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
+        .top-header { width: 100%; max-width: 600px; display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; margin-bottom: 20px; }
+        .user-info h2 { margin: 0; font-size: 22px; color: #ffffff; }
+        .user-info p { margin: 3px 0 0 0; font-size: 14px; color: #aaa; }
+        .user-avatar { width: 45px; height: 45px; background-color: #2ecc71; color: #fff; font-size: 20px; font-weight: bold; display: flex; justify-content: center; align-items: center; border-radius: 50%; }
+
+        .section-title { width: 100%; max-width: 600px; font-size: 18px; margin: 0 0 15px 5px; color: #2ecc71; }
+        
+        .categories-grid { 
+            width: 100%; 
+            max-width: 600px; 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 15px; 
+            margin-bottom: 25px; 
+            opacity: 0; 
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        .category-card { 
+            background-color: #1e1e1e; 
+            border-radius: 10px; 
+            padding: 25px 15px 15px 15px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            width: 100%; 
+            position: relative; 
+            border: 1px solid #2a2a2a;
+        }
+        .category-card:hover { background-color: #252525; border-color: #333; }
+        .card-icon { font-size: 32px; margin-bottom: 8px; }
+        .card-title { font-size: 15px; margin: 0 0 8px 0; }
+
+        .premium-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(241, 196, 15, 0.15);
+            color: #f1c40f;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            border: 1px solid rgba(241, 196, 15, 0.3);
+        }
+
+        .card-price {
+            font-size: 13px;
+            color: #2ecc71;
+            font-weight: bold;
+            background: rgba(46, 204, 113, 0.1);
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-top: 2px;
+        }
+
+        .bottom-nav { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            background-color: #1e1e1e; 
+            border-top: 1px solid #333; 
+            height: 70px; 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center; 
+            z-index: 1000; 
+            width: 100%;
+        }
+        
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #aaa; text-decoration: none; font-size: 12px; cursor: pointer; background: none; border: none; padding: 5px; }
+        .nav-item.active { color: #2ecc71; }
+        .nav-icon { font-size: 20px; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="top-header">
+        <div class="user-info">
+            <h2>নমস্কার, <span id="user-name">...</span> 👋</h2>
+            <p>আজকে আপনার প্রস্তুতির লক্ষ্য পূরণ করুন।</p>
+        </div>
+        <div> <button id="btn-admin-panel" style="display: none; background: #e67e22; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer;">Admin Panel ⚙️</button>    </div>
+        <div class="user-avatar" id="user-avatar">⌛</div>
+    </div>
+
+    <h3 class="section-title">Active Exams (চলতি পরীক্ষা সমূহ)</h3>
+    <div class="categories-grid" id="main-exam-grid">
+        <div class="category-card exam-btn" data-exam="wb_police">
+            <div class="premium-badge">👑 🔒</div>
+            <div class="card-icon">👮</div>
+            <h4 class="card-title">WB Police</h4>
+            <div class="card-price">₹10</div>
+        </div>
+        
+        <div class="category-card exam-btn" data-exam="wbpsc">
+            <div class="premium-badge">👑 🔒</div>
+            <div class="card-icon">🏛️</div>
+            <h4 class="card-title">WBPSC Exam</h4>
+            <div class="card-price">₹15</div>
+        </div>
+        
+        <div class="category-card exam-btn" data-exam="railway">
+            <div class="premium-badge">👑 🔒</div>
+            <div class="card-icon">🚂</div>
+            <h4 class="card-title">Railway Exam</h4>
+            <div class="card-price">₹20</div>
+        </div>
+        
+        <div class="category-card exam-btn" data-exam="free_test">
+            <div class="premium-badge" style="background: rgba(46, 204, 113, 0.15); color: #2ecc71; border-color: rgba(46, 204, 113, 0.3);">🎁 FREE</div>
+            <div class="card-icon">📚</div>
+            <h4 class="card-title">Free Test Exam</h4>
+            <div class="card-price">Active</div>
+        </div>
+    </div>
+
+    <h3 class="section-title">Upcoming Exams (আসন্ন পরীক্ষা)</h3>
+    <div class="categories-grid" style="opacity: 0.5; display: grid;">
+        <div class="category-card" style="cursor: not-allowed;"><div class="card-icon">📝</div><h4 class="card-title">SSC CGL / CHSL</h4></div>
+        <div class="category-card" style="cursor: not-allowed;"><div class="card-icon">🏫</div><h4 class="card-title">WB TET / SLST</h4></div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="dashboard.html" class="nav-item active">
+            <div class="nav-icon">🏠</div>
+            <span>Home</span>
+        </a>
+        <a href="mocktestcomming.html" class="nav-item">
+            <div class="nav-icon">📝</div>
+            <span>Tests</span>
+        </a>
+        <a href="https://wa.me/916294005916?text=নমস্কার,%20আমার%20একটি%20সমস্যা%20হচ্ছে।" target="_blank" class="nav-item" style="color: #25D366;">
+            <div class="nav-icon">💬</div>
+            <span>WhatsApp</span>
+        </a>
+        <button class="nav-item" id="btn-logout">
+            <div class="nav-icon">🚪</div>
+            <span>Logout</span>
+        </button>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCoBw6-MTBXtIJPEvP9qB7I3JFpJ7MZM5I",
+        authDomain: "mocktest0.firebaseapp.com",
+        projectId: "mocktest0",
+        storageBucket: "mocktest0.firebasestorage.app",
+        messagingSenderId: "251833325363",
+        appId: "1:251833325363:web:8bdd09a4b717bf045e9046",
+        measurementId: "G-6P2P3WS42H"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+            tabManager: persistentMultipleTabManager()
+        })
+    });
+
+    let userPurchasedExams = {};
+    const ADMIN_EMAIL = "amit089das@gmail.com"; 
+
+    (function renderInstantly() {
+        const cachedName = localStorage.getItem('user_name');
+        if (cachedName) {
+            document.getElementById('user-name').innerText = cachedName;
+            document.getElementById('user-avatar').innerText = cachedName.charAt(0).toUpperCase();
+        }
+
+        let lastUserUid = localStorage.getItem('current_user_uid');
+        if (!lastUserUid) {
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('user_data_')) {
+                    lastUserUid = key.replace('user_data_', '');
+                    localStorage.setItem('current_user_uid', lastUserUid);
+                    break;
+                }
+            }
+        }
+        
+        if (lastUserUid) {
+            const cachedData = localStorage.getItem(`user_data_${lastUserUid}`);
+            if (cachedData) {
+                const userData = JSON.parse(cachedData);
+                console.log("Dashboard:লোকাল স্টোরেজ থেকে ডেটা লোড হয়েছে (ফ্রি রিড)!");
+                userPurchasedExams = userData.purchasedExams || {};
+                
+                updateExamButtons();
+                setupButtonListeners();
+                document.getElementById('main-exam-grid').style.opacity = "1";
+            }
+        } else {
+            setTimeout(() => {
+                document.getElementById('main-exam-grid').style.opacity = "1";
+            }, 200);
+        }
+    })();
+
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+            window.location.href = "login.html";
+        } else {
+            localStorage.setItem('current_user_uid', user.uid);
+            try {
+                if (user.email === ADMIN_EMAIL) {
+                    const adminBtn = document.getElementById('btn-admin-panel');
+                    if (adminBtn) adminBtn.style.display = "block";
+                }
+
+                // ফায়ারবেস থেকে লাইভ রিয়েল-টাইম ডেটা সিঙ্ক করা
+                const userDocRef = doc(db, "users", user.uid);
+                const userDocSnap = await getDoc(userDocRef);
+
+                if (userDocSnap.exists()) {
+                    const userData = userDocSnap.data();
+                    localStorage.setItem(`user_data_${user.uid}`, JSON.stringify(userData));
+                    processUserData(userData, user);
+                }
+
+            } catch (error) {
+                console.error("Error loading user data:", error);
+                document.getElementById('main-exam-grid').style.opacity = "1";
+            }
+        }
+    });
+
+    function processUserData(userData, user) {
+        const finalName = userData.name || user.displayName || "User";
+        localStorage.setItem('user_name', finalName);
+
+        document.getElementById('user-name').innerText = finalName;
+        document.getElementById('user-avatar').innerText = finalName.charAt(0).toUpperCase();
+
+        userPurchasedExams = userData.purchasedExams || {};
+
+        updateExamButtons();
+        setupButtonListeners();
+        document.getElementById('main-exam-grid').style.opacity = "1";
+    }
+
+    function updateExamButtons() {
+        document.querySelectorAll('.exam-btn').forEach(button => {
+            const examKey = button.getAttribute('data-exam');
+            if (examKey === 'free_test') return;
+
+            const badge = button.querySelector('.premium-badge');
+            const priceTag = button.querySelector('.card-price');
+            
+            // ডিফল্ট প্রাইস ভ্যালু সেট করার জন্য (যদি আগে অ্যাক্টিভ থেকে আবার লকড হয়)
+            let defaultPrice = "10";
+            if (examKey === "wbpsc") defaultPrice = "15";
+            else if (examKey === "railway") defaultPrice = "20";
+
+            if (userPurchasedExams[examKey] === true) {
+                // এক্সাম অ্যাক্টিভ হলে মাথায় প্রিমিয়াম ব্যাজটি সম্পূর্ণ হাইড বা রিমুভ করে দেওয়া হলো
+                if (badge) badge.style.display = "none";
+                
+                // নিচের প্রাইস ট্যাগের জায়গায় 'Active' লেখা দেখাবে
+                if (priceTag) priceTag.innerHTML = "Active";
+            } else {
+                // এক্সাম কেনা না থাকলে আগের মতো লক থাকবে এবং প্রাইস দেখাবে
+                if (badge) {
+                    badge.style.display = "flex";
+                    badge.innerHTML = "👑 🔒";
+                    badge.style.background = "rgba(241, 196, 15, 0.15)";
+                    badge.style.color = "#f1c40f";
+                    badge.style.borderColor = "rgba(241, 196, 15, 0.3)";
+                }
+                if (priceTag) priceTag.innerHTML = "₹" + defaultPrice;
+            }
+        });
+    }
+
+    // ⚡ [Instant Access Logic] - নেটওয়ার্ক কলের জন্য অপেক্ষা না করে সাথে সাথে রিডাইরেক্ট করবে
+    window.checkAccess = function(examKey) {
+        if (examKey === "free_test") {
+            window.location.href = `freetest.html?exam=${examKey}`;
+            return;
+        }
+
+        // লোকাল ক্যাশ মেমোরি থেকে ইনস্ট্যান্ট ভেরিফিকেশন করা হচ্ছে
+        const currentUid = localStorage.getItem('current_user_uid');
+        let localPurchased = userPurchasedExams;
+        
+        if (currentUid) {
+            const localDataStr = localStorage.getItem(`user_data_${currentUid}`);
+            if (localDataStr) {
+                const parsed = JSON.parse(localDataStr);
+                if (parsed && parsed.purchasedExams) {
+                    localPurchased = parsed.purchasedExams;
+                }
+            }
+        }
+
+        if (localPurchased[examKey] === true) {
+            window.location.href = `mocktestcomming.html?exam=${examKey}`;
+        } else {
+            let price = "10";
+            let examName = "";
+
+            if (examKey === "wb_police") { examName = "WB Police"; price = "10"; }
+            else if (examKey === "wbpsc") { examName = "WBPSC Exam"; price = "15"; }
+            else if (examKey === "railway") { examName = "Railway Exam"; price = "20"; }
+
+            window.location.href = `payment.html?exam=${examKey}&name=${encodeURIComponent(examName)}&price=${price}`;
+        }
+    }
+
+    function setupButtonListeners() {
+        document.querySelectorAll('.exam-btn').forEach(button => {
+            button.replaceWith(button.cloneNode(true)); 
+        });
+
+        document.querySelectorAll('.exam-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const examKey = this.getAttribute('data-exam');
+                window.checkAccess(examKey);
+            });
+        });
+    }
+
+    const logoutBtn = document.getElementById('btn-logout');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            if(confirm("আপনি কি নিশ্চিতভাবে লগআউট করতে চান?")) {
+                localStorage.clear(); 
+                signOut(auth).then(() => { 
+                    window.location.href = "login.html"; 
+                }).catch(error => console.error("Logout Error:", error));
+            }
+        });
+    }
+
+    const adminPanelBtn = document.getElementById('btn-admin-panel');
+    if (adminPanelBtn) {
+        adminPanelBtn.addEventListener('click', () => {
+            window.location.href = "admin.html";
+        });
+    }
+</script>
+</body>
+</html>
