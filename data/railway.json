@@ -1,0 +1,24 @@
+{
+  "mock": {
+    "RRB NTPC": [
+      { "name": "NTPC CBT-1 Mock 1", "link": "Mocktestformat.html" },
+      { "name": "NTPC CBT-1 Premium Mock 2", "link": "Mocktestformat.html" }
+    ],
+    "Group D": [
+      { "name": "Railway Group D Mock 1", "link": "Mocktestformat.html" }
+    ]
+  },
+  "current": {},
+  "pyp": {
+      "Group D": {
+        "2025": [
+          { "name": "27_Nov_2025_1shift", "link": "Mocktestformat.html?testfile=Railway_QS/PQR_Question/Group_D_2026/27_11_2025_shift_1", 
+          "totalQ": 100,      
+          "time": "90 Min",
+          "full_marks": 100,
+          "negative_marking": 0.33}
+        ]
+      }
+  },
+  "subject": {}
+}
