@@ -31,7 +31,7 @@
         .tab { cursor: pointer; color: #aaa; padding-bottom: 5px; white-space: nowrap; font-size: 15px; }
         .tab.active { color: #fff; border-bottom: 2px solid #2ecc71; font-weight: bold; }
         
-        .list-container-wrapper { flex: 1; }
+        .list-container-wrapper { flex: 1; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
         .list-item { background: #1e1e1e; padding: 15px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
         .list-item:hover { background: #252525; }
         .btn-start { color: #4a90e2; font-weight: bold; text-decoration: none; font-size: 14px; }
@@ -70,7 +70,7 @@
         }, { passive: true });
         document.addEventListener('touchmove', function(e) {
             var y = e.touches[0].clientY;
-            var scrollable = e.target.closest('.content-area, .grid-content, #instruction-screen, .tab-content, .scrollable, [style*="overflow"]');
+            var scrollable = e.target.closest('.content-area, .grid-content, #instruction-screen, .tab-content, .scrollable, .list-container-wrapper, [style*="overflow"]');
             if (!scrollable) {
                 e.preventDefault();
                 return;

@@ -87,6 +87,7 @@
             overflow-y: auto; 
             padding-bottom: 20px; 
             -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
         
         .list-container-wrapper::-webkit-scrollbar {
@@ -239,7 +240,7 @@
         }, { passive: true });
         document.addEventListener('touchmove', function(e) {
             var y = e.touches[0].clientY;
-            var scrollable = e.target.closest('.content-area, .grid-content, #instruction-screen, .tab-content, .scrollable, [style*="overflow"]');
+            var scrollable = e.target.closest('.content-area, .grid-content, #instruction-screen, .tab-content, .scrollable, .list-container-wrapper, [style*="overflow"]');
             if (!scrollable) {
                 e.preventDefault();
                 return;
