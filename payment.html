@@ -59,45 +59,6 @@
         
         .notice { font-size: 12px; color: #aaa; margin-top: 15px; line-height: 1.4; text-align: left; }
     </style>
-    <style id="pwa-global-fix">
-        html {
-        overscroll-behavior: none !important;
-        overscroll-behavior-y: none !important;
-        height: 100%;
-        overflow: hidden;
-    }
-    body {
-        overscroll-behavior: none !important;
-        overscroll-behavior-y: none !important;
-        touch-action: pan-x pan-y;
-        position: fixed;
-        width: 100%;
-        height: 100%;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    </style>
-    <script>
-    // PWA: Prevent pull-to-refresh globally
-    (function() {
-        var lastY = 0;
-        document.addEventListener('touchstart', function(e) {
-            lastY = e.touches[0].clientY;
-        }, { passive: true });
-        document.addEventListener('touchmove', function(e) {
-            var y = e.touches[0].clientY;
-            var scrollable = e.target.closest('.content-area, .grid-content, #instruction-screen, .tab-content, .scrollable, [style*="overflow"]');
-            if (!scrollable) {
-                e.preventDefault();
-                return;
-            }
-            if (scrollable.scrollTop === 0 && y > lastY) {
-                e.preventDefault();
-            }
-            lastY = y;
-        }, { passive: false });
-    })();
-    </script>
 </head>
 <body>
 
@@ -207,6 +168,5 @@
             }
         });
     </script>
-<script src="pwa-helper.js"></script>
 </body>
 </html>
