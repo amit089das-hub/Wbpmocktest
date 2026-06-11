@@ -4,7 +4,7 @@
       "WBP Constable": [
         { 
           "name": "WB Police Constable Mock 1", 
-          "link": "Mocktestformat.html?testfile=WBP_mock_test/WBP_constable/WBP_constable_mock1",
+          "link": "Mocktestformat.html?testfile=Question/WBP_mock_test/WBP_constable/WBP_constable_mock1",
           "totalQ": 85,    
           "time": "30 Min",
           "full_marks": 85,
@@ -12,7 +12,7 @@
         },
         { 
           "name": "WBP Constable Mock 2", 
-          "link": "Mocktestformat.html?testfile=WBP_mock_test/WBP_constable/wbp_constable_mock_2",
+          "link": "Mocktestformat.html?testfile=Question/WBP_mock_test/WBP_constable/wbp_constable_mock_2",
           "totalQ": 30,
           "time": "10 Min",
           "full_marks": 85,
@@ -22,7 +22,7 @@
       "KP Constable": [
         {
           "name": "Full Mock 1",
-          "link": "Mocktestformat.html?testfile=WBP_mock_test/KP_Constable/KPC_full_mock_1",
+          "link": "Mocktestformat.html?testfile=Question/WBP_mock_test/KP_Constable/KPC_full_mock_1",
           "totalQ": 85,
           "time": "60 Min",
           "full_marks": 85,
@@ -30,7 +30,7 @@
         },
         {
           "name": "Full Mock 2",
-          "link": "Mocktestformat.html?testfile=WBP_mock_test/KP_Constable/KPC_full_mock_2",
+          "link": "Mocktestformat.html?testfile=Question/WBP_mock_test/KP_Constable/KPC_full_mock_2",
           "totalQ": 85,
           "time": "60 Min",
           "full_marks": 85,
@@ -38,7 +38,7 @@
         },
         {
           "name": "Full Mock 3",
-          "link": "Mocktestformat.html?testfile=WBP_mock_test/KP_Constable/KPC_full_mock_3",
+          "link": "Mocktestformat.html?testfile=Question/WBP_mock_test/KP_Constable/KPC_full_mock_3",
           "totalQ": 85,
           "time": "60 Min",
           "full_marks": 85,
@@ -46,7 +46,7 @@
         },
         {
           "name": "Full Mock 4",
-          "link": "Mocktestformat.html?testfile=WBP_mock_test/KP_Constable/KPC_full_mock_4",
+          "link": "Mocktestformat.html?testfile=Question/WBP_mock_test/KP_Constable/KPC_full_mock_4",
           "totalQ": 85,
           "time": "60 Min",
           "full_marks": 85,

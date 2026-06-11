@@ -3,7 +3,7 @@
     "WB Police": {
     "WBP Constable": [
       { "name": "WBP Constable Mock 1", "link": "Mocktestformat.html?testfile=free_mock_test/WBP_constable_free/wbp_constable_free_mock_1", "totalQ": 20, "time": "90 Min" },
-      { "name": "WBP Constable Mock 2", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
+      { "name": "WBP Constable Mock 2", "link": "Mocktestformat.html?testfile=WBP_mock_test/KP_Constable/KPC_full_mock_1", "totalQ": 30, "time": "15 Min" },
       { "name": "WBP Constable Mock 3", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
       { "name": "WBP Constable Mock 4", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" },
       { "name": "WBP Constable Mock 5", "link": "Coming Soon", "totalQ": 30, "time": "15 Min" }

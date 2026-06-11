@@ -12,7 +12,43 @@
   "pyp": {
       "Group D": {
         "2025": [
-          { "name": "27_Nov_2025_1shift", "link": "Mocktestformat.html?testfile=Railway_QS/PQR_Question/Group_D_2026/27_11_2025_shift_1", 
+          { "name": "27 Nov 2025 shift 1", "link": "Mocktestformat.html?testfile=Question/Railway_QS/PQR_Question/Group_D_2026/27_11_2025_shift_1", 
+          "totalQ": 100,      
+          "time": "90 Min",
+          "full_marks": 100,
+          "negative_marking": 0.33},
+          
+          { "name": "27 Nov 2025 shift 2", "link": "Mocktestformat.html?testfile=Question/Railway_QS/PQR_Question/Group_D_2026/27_11_2025_shift_2", 
+          "totalQ": 100,      
+          "time": "90 Min",
+          "full_marks": 100,
+          "negative_marking": 0.33},
+          
+          { "name": "27 Nov 2025 shift 3", "link": "Mocktestformat.html?testfile=Question/Railway_QS/PQR_Question/Group_D_2026/27_11_2025_shift_3", 
+          "totalQ": 100,      
+          "time": "90 Min",
+          "full_marks": 100,
+          "negative_marking": 0.33},
+          
+          { "name": "28 Nov 2025 shift 1", "link": "", 
+          "totalQ": 100,      
+          "time": "90 Min",
+          "full_marks": 100,
+          "negative_marking": 0.33},
+          
+          { "name": "28 Nov 2025 shift 2", "link": "", 
+          "totalQ": 100,      
+          "time": "90 Min",
+          "full_marks": 100,
+          "negative_marking": 0.33},
+          
+          { "name": "28 Nov 2025 shift 3", "link": "", 
+          "totalQ": 100,      
+          "time": "90 Min",
+          "full_marks": 100,
+          "negative_marking": 0.33},
+          
+          { "name": "1 Dec 2025 shift 1", "link": "", 
           "totalQ": 100,      
           "time": "90 Min",
           "full_marks": 100,

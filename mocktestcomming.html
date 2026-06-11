@@ -14,10 +14,11 @@
             background: linear-gradient(135deg, #121212, #1a1a1a); 
             color: #e0e0e0; 
             margin: 0; 
-            padding: 20px 15px 100px 15px; 
+            padding: 20px 15px 90px 15px; 
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            height: 100vh; 
+            overflow: hidden; 
         }
         .header { 
             background: rgba(30, 30, 30, 0.8); 
@@ -28,6 +29,7 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.05);
             text-align: center;
+            flex-shrink: 0; 
         }
         .header h2 { margin: 0 0 5px 0; font-size: 20px; color: #2ecc71; letter-spacing: 0.5px; }
         .header p { margin: 0; font-size: 13px; color: #b0b0b0; }
@@ -40,6 +42,7 @@
             overflow-x: auto; 
             scrollbar-width: none;
             -webkit-overflow-scrolling: touch;
+            flex-shrink: 0; 
         }
         .tabs::-webkit-scrollbar { display: none; }
         
@@ -69,6 +72,7 @@
             margin-bottom: 12px;
             font-weight: 500;
             animation: pulse 2s infinite;
+            flex-shrink: 0; 
         }
         @keyframes pulse {
             0% { opacity: 0.4; }
@@ -76,7 +80,20 @@
             100% { opacity: 0.4; }
         }
         
-        .list-container-wrapper { flex: 1; }
+        .list-container-wrapper { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding-bottom: 20px; 
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .list-container-wrapper::-webkit-scrollbar {
+            width: 4px;
+        }
+        .list-container-wrapper::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
         
         /* ফোল্ডার লিস্ট আইটেম */
         .list-item { 
@@ -198,7 +215,6 @@
 
     <div class="header">
         <h2 id="exam-title">Loading Test Portal...</h2>
-        <p id="exam-desc">আপনার পছন্দের ক্যাটাগরি বেছে নিয়ে মক টেস্ট শুরু করুন।</p>
     </div>
 
     <div class="tabs" id="main-tabs">
@@ -265,7 +281,9 @@
                 document.getElementById('main-tabs').style.display = 'none'; 
                 document.getElementById('scroll-hint-element').style.display = 'none'; 
                 document.getElementById('exam-title').innerText = "আপনার কেনা এক্সাম সমূহ"; 
-                document.getElementById('exam-desc').innerText = "যে ক্যাটাগরিগুলো আপনি কিনেছেন, সেগুলো নিচে দেওয়া হলো।"; 
+                if (document.getElementById('exam-desc')) {
+                    document.getElementById('exam-desc').innerText = "যে ক্যাটাগরিগুলো আপনি কিনেছেন, সেগুলো নিচে দেওয়া হলো।"; 
+                }
 
                 let lastUserUid = null;
                 for (let i = 0; i < localStorage.length; i++) {
@@ -297,7 +315,9 @@
                     document.getElementById('main-tabs').style.display = 'none'; 
                     document.getElementById('scroll-hint-element').style.display = 'none';
                     document.getElementById('exam-title').innerText = "আপনার কেনা এক্সাম সমূহ"; 
-                    document.getElementById('exam-desc').innerText = "যে ক্যাটাগরিগুলো আপনি কিনেছেন, সেগুলো নিচে দেওয়া হলো।"; 
+                    if (document.getElementById('exam-desc')) {
+                        document.getElementById('exam-desc').innerText = "যে ক্যাটাগরিগুলো আপনি কিনেছেন, সেগুলো নিচে দেওয়া হলো।"; 
+                    }
                     showPurchasedExams(user.uid); 
                 }
             }
@@ -329,6 +349,7 @@
         document.getElementById('btn-logout').addEventListener('click', () => {
             if(confirm("আপনি কি নিশ্চিতভাবে লগআউট করতে চান?")) {
                 localStorage.clear();
+                sessionStorage.clear();
                 signOut(auth).then(() => { window.location.href = "login.html"; }); 
             }
         });
@@ -381,7 +402,7 @@
             const examNames = {
                 "wb_police": "WB Police Mock Test", 
                 "wbpsc": "WBPSC Mock Test Portal", 
-                "railway": "Railway Recruitment Mock Test", 
+                "railway": "Railway Mock Test", 
                 "free_test": "Free Test Mock Test Portal" 
             };
             
@@ -391,7 +412,20 @@
             if (cachedJSON) {
                 try {
                     data = JSON.parse(cachedJSON);
-                    loadList('mock', document.getElementById('tab-mock'));
+                    
+                    // চেক করা হচ্ছে ব্যাক বাটন দিয়ে আসার পর কোনো সেভ করা স্টেট আছে কি না
+                    const savedStateStr = sessionStorage.getItem(`saved_nav_${currentExamKey}`);
+                    if (savedStateStr) {
+                        const savedState = JSON.parse(savedStateStr);
+                        currentCategoryGlobal = savedState.category || 'mock';
+                        navStack = savedState.navStack || [];
+                        
+                        // সঠিক ট্যাব হাইলাইট করা
+                        const activeTabBtn = document.getElementById(`tab-${currentCategoryGlobal}`);
+                        loadList(currentCategoryGlobal, activeTabBtn, false);
+                    } else {
+                        loadList('mock', document.getElementById('tab-mock'), false);
+                    }
                 } catch(e) { console.error(e); }
             } else {
                 container.innerHTML = '<p style="color:#aaa; padding:15px;">মক টেস্টের ডেটা লোড হচ্ছে...</p>';
@@ -406,7 +440,17 @@
                 if (JSON.stringify(data) !== JSON.stringify(freshData)) {
                     data = freshData;
                     localStorage.setItem(`cache_json_${currentExamKey}`, JSON.stringify(freshData));
-                    loadList('mock', document.getElementById('tab-mock')); 
+                    
+                    const savedStateStr = sessionStorage.getItem(`saved_nav_${currentExamKey}`);
+                    if (savedStateStr) {
+                        const savedState = JSON.parse(savedStateStr);
+                        currentCategoryGlobal = savedState.category || 'mock';
+                        navStack = savedState.navStack || [];
+                        const activeTabBtn = document.getElementById(`tab-${currentCategoryGlobal}`);
+                        loadList(currentCategoryGlobal, activeTabBtn, false); 
+                    } else {
+                        loadList('mock', document.getElementById('tab-mock'), false); 
+                    }
                 }
 
             } catch (error) {
@@ -417,16 +461,29 @@
             }
         }
 
-        function loadList(categoryType, tabElement) {
+        function loadList(categoryType, tabElement, pushToHistory = true) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); 
             if(tabElement) tabElement.classList.add('active'); 
 
-            currentCategoryGlobal = categoryType;
-            navStack = []; 
+            // যদি একদম নতুন ট্যাবে ক্লিক করা হয় (স্টেট রিস্টোরেশন ছাড়া), তবে স্ট্যাক খালি করা হবে
+            if (pushToHistory) {
+                currentCategoryGlobal = categoryType;
+                navStack = []; 
+                history.pushState({ category: currentCategoryGlobal, depth: 0 }, "");
+                
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentExamKey = urlParams.get('exam');
+                if (currentExamKey) {
+                    sessionStorage.setItem(`saved_nav_${currentExamKey}`, JSON.stringify({ category: currentCategoryGlobal, navStack: navStack }));
+                }
+            }
             renderCurrentFolderLevel();
         }
 
         function renderCurrentFolderLevel() {
+            const wrapper = document.querySelector('.list-container-wrapper');
+            if(wrapper) wrapper.scrollTop = 0;
+
             const container = document.getElementById('list-container'); 
             container.innerHTML = ''; 
             
@@ -440,8 +497,7 @@
                 backBtn.className = 'back-btn'; 
                 backBtn.textContent = '← Back'; 
                 backBtn.onclick = () => {
-                    navStack.pop();
-                    renderCurrentFolderLevel();
+                    history.back();
                 }; 
                 container.appendChild(backBtn); 
             }
@@ -465,6 +521,18 @@
                 Object.keys(currentDataContext).forEach(keyName => {
                     renderCategoryItem(keyName, () => {
                         navStack.push({ name: keyName, folderData: currentDataContext[keyName] });
+                        
+                        history.pushState({ 
+                            category: currentCategoryGlobal, 
+                            depth: navStack.length 
+                        }, "");
+
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const currentExamKey = urlParams.get('exam');
+                        if (currentExamKey) {
+                            sessionStorage.setItem(`saved_nav_${currentExamKey}`, JSON.stringify({ category: currentCategoryGlobal, navStack: navStack }));
+                        }
+
                         renderCurrentFolderLevel();
                     });
                 });
@@ -480,7 +548,6 @@
             container.appendChild(item); 
         }
 
-        // 🛠️ নিখুঁত ফাইল ভ্যালিডেশন সহ ফাইনাল টেস্ট কার্ড রেন্ডারার
         function renderFinalTestItem(mockObject) {
             const container = document.getElementById('list-container'); 
             const itemCard = document.createElement('div');
@@ -489,31 +556,32 @@
             const linkStr = mockObject.link ? mockObject.link.trim() : "";
             const linkLower = linkStr.toLowerCase();
             
-            // ১. চেক করা হচ্ছে লিংক খালি, না কি "Coming Soon" লেখা আছে
             let isComingSoon = !linkStr || linkLower === "" || linkLower === "coming soon";
             
-            // ২. অ্যাডভান্সড চেক: যদি লিংক শুধু Mocktestformat.html হয় এবং তাতে কোনো নির্দিষ্ট '?testfile=' প্যারামিটার না থাকে,
-            // তবে বুঝা যাবে টেস্ট ফাইলটি এখনো তৈরি বা আপলোড করা হয়নি। তাই সেটিও লক থাকবে।
             if (linkLower.includes("mocktestformat.html") && !linkLower.includes("testfile=")) {
                 isComingSoon = true;
             }
             
-            // ⏸️ আপনার যোগ করা নতুন পজ এবং রিজিউম চেকিং লজিক (সম্পূর্ণ অক্ষুণ্ণ রাখা হয়েছে)
             const testParam = linkStr.split('testfile=')[1] || "default_test";
             const pauseKeyToCheck = "mock_test_time_" + testParam + "_paused";
             const isExamPaused = localStorage.getItem(pauseKeyToCheck) === "true";
 
+            const fMarks = mockObject.full_marks || mockObject.totalQ || 0;
+            const nMarking = mockObject.negative_marking || 0.25;
+            const tQ = mockObject.totalQ || 0;
+            const tTime = encodeURIComponent(mockObject.time || '');
+            const baseLink = mockObject.link ? mockObject.link.trim() : "";
+            const separator = baseLink.includes('?') ? '&' : '?';
+            const finalLink = `${baseLink}${separator}marks=${fMarks}&neg=${nMarking}&q=${tQ}&timeStr=${tTime}&testName=${encodeURIComponent(mockObject.name)}`;
+
             let buttonHtml = "";
 
             if (isComingSoon) {
-                // ফাইল বা সঠিক লিংক না থাকলে বাটনটি লক হয়ে "🔒 Coming" দেখাবে
                 buttonHtml = `<button class="btn-test-action btn-start-disabled" disabled>🔒 Coming</button>`;
             } else if (isExamPaused) {
-                // 🟡 লোকাল স্টোরেজে পজ ডাটা থাকলে বাটন অটোমেটিক Resume হয়ে যাবে
-                buttonHtml = `<button class="btn-test-action" style="background-color: #fdd663; color: #000;" onclick="window.location.href='${mockObject.link}'">⏸️ Resume</button>`;
+                buttonHtml = `<button class="btn-test-action" style="background-color: #fdd663; color: #000;" onclick="window.location.href='${finalLink}'">⏸️ Resume</button>`;
             } else {
-                // 🟢 সাধারণ অবস্থায় Start বাটন
-                buttonHtml = `<button class="btn-test-action btn-start-active" onclick="window.location.href='${mockObject.link}'">Start</button>`;
+                buttonHtml = `<button class="btn-test-action btn-start-active" onclick="window.location.href='${finalLink}'">Start</button>`;
             }
 
             itemCard.innerHTML = `
@@ -527,6 +595,39 @@
             `;
 
             container.appendChild(itemCard);
+        }
+
+        window.addEventListener('popstate', (event) => {
+            if (event.state) {
+                const targetDepth = event.state.depth || 0;
+                const targetCategory = event.state.category || 'mock';
+
+                if (targetCategory !== currentCategoryGlobal) {
+                    currentCategoryGlobal = targetCategory;
+                    const activeTabElement = document.getElementById(`tab-${targetCategory}`);
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); 
+                    if(activeTabElement) activeTabElement.classList.add('active');
+                }
+
+                while (navStack.length > targetDepth) {
+                    navStack.pop();
+                }
+                
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentExamKey = urlParams.get('exam');
+                if (currentExamKey) {
+                    sessionStorage.setItem(`saved_nav_${currentExamKey}`, JSON.stringify({ category: currentCategoryGlobal, navStack: navStack }));
+                }
+
+                renderCurrentFolderLevel();
+            } else {
+                navStack = [];
+                renderCurrentFolderLevel();
+            }
+        });
+
+        if (new URLSearchParams(window.location.search).get('exam')) {
+            history.replaceState({ category: 'mock', depth: 0 }, "");
         }
 
         document.getElementById('tab-mock').addEventListener('click', (e) => loadList('mock', e.target)); 

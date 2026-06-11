@@ -55,49 +55,114 @@
         .inst-footer { margin-top: auto; padding-bottom: 30px; text-align: center; }
         .btn-start-test { width: 100%; max-width: 400px; padding: 15px; background-color: #34a853; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
 
-        /* Top Header */
-        .top-header {
-            background-color: #1f2124;
-            padding: 12px 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #383a3e;
-        }
+        /* --- টপ হেডার ও টাইমার লেআউট ফিক্স --- */
+.top-header {
+    background-color: #1f2124;
+    padding: 12px 10px;
+    display: flex;
+    justify-content: space-between; /* পরিবর্তন: টাইমার বামে এবং বাটনগুলো একদম ডান দিকে থাকবে */
+    align-items: center;
+    border-bottom: 1px solid #383a3e;
+    gap: 12px; /* উপাদানগুলোর মাঝের দূরত্ব কিছুটা বাড়ানো হলো */
+}
 
-        .timer-section { display: flex; align-items: center; gap: 10px; }
-        .timer-circle { width: 24px; height: 24px; border: 2px solid #ffffff; border-radius: 50%; }
-        .timer-text { font-size: 18px; font-weight: bold; color: #ffffff; }
-        .test-title { font-size: 12px; color: #9aa0a6; margin-top: 2px; }
+.timer-section { 
+    display: flex; 
+    align-items: center; 
+    flex-shrink: 0;
+    order: 1; /* এটি টাইমারকে একদম প্রথমে (বাম দিকে) নিয়ে আসবে */
+}
+
+/* রিং এবং সময়কে পাশাপাশি লক করে রাখার আসল ম্যাজিক */
+.timer-container {
+    display: flex;
+    align-items: center; /* রিং এবং টেক্সটকে লম্বালম্বিভাবে একদম সমান লাইনে রাখবে */
+    gap: 8px; /* রিং ও সময়ের মাঝখানের ফাঁকা দূরত্ব */
+}
+
+.timer-svg {
+    transform: rotate(-90deg);
+    flex-shrink: 0;
+}
+
+.timer-bg-circle {
+    stroke: #383a3e;
+}
+
+.timer-progress-circle {
+    stroke: #34a853;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
+}
+
+/* সময়ের ফন্ট এবং পজিশন স্টাইল */
+.timer-text, #timer { 
+    font-size: 18px; 
+    font-weight: bold; 
+    color: #ffffff; 
+    white-space: nowrap; /* সময় যেন কোনো অবস্থাতেই ভেঙে নিচে না যায় */
+}
+
+.test-title { font-size: 12px; color: #9aa0a6; margin-top: 2px; }
+
+/* বাটনগুলোর লেআউট ফিক্স */
+.right-actions { 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    flex-grow: 1; 
+    justify-content: flex-end; /* পরিবর্তন: বাটনগুলোকে সবসময় ডান দিকে পুশ করে রাখবে */
+    flex-wrap: nowrap; 
+    overflow: hidden; 
+}
+
+
         
         /* UPDATED: Review Mode & Right Actions Layout Fixes */
-        .right-actions { display: flex; align-items: center; gap: 8px; width: 100%; justify-content: flex-end; flex-wrap: nowrap; overflow: hidden; }
-        #review-filter-container { flex: 1; min-width: 0; }
-        #review-filter-container > div { display: flex; gap: 5px; justify-content: flex-start; width: 100%; }
-        
-        #subject-filter-dropdown, 
-        #performance-filter-dropdown {
-            background-color: #282a2d;
-            color: #ffffff;
-            border: 1px solid #4a4d51;
-            border-radius: 4px;
-            font-size: 12px;
-            outline: none;
-            cursor: pointer;
-            font-weight: bold;
-            padding: 5px 6px;
-        }
-        #subject-filter-dropdown {
-            flex: 1;
-            min-width: 0;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            overflow: hidden;
-        }
-        #performance-filter-dropdown {
-            flex-shrink: 0;
-            max-width: 90px;
-        }
+        .right-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    justify-content: flex-start !important; /* বাটনগুলো টাইমারের পর থেকে বামে সাজানো থাকবে */
+    flex-grow: 1 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    order: 2; /* এটি টাইমারের ঠিক পরে বাটনগুলোকে বসাবে */
+}
+
+
+#review-filter-container {
+    flex: 1 !important;
+    min-width: 0 !important;
+    display: none; /* জাভাস্ক্রিপ্ট দিয়ে পরে flex করা হবে */
+}
+
+#subject-filter-dropdown, 
+#performance-filter-dropdown {
+    background-color: #282a2d;
+    color: #ffffff;
+    border: 1px solid #4a4d51;
+    border-radius: 4px;
+    font-size: 11px; /* মোবাইল স্ক্রিনে ফিট হওয়ার জন্য ফন্ট সাইজ সামান্য ছোট করা হলো */
+    outline: none;
+    cursor: pointer;
+    font-weight: bold;
+    padding: 6px 4px;
+}
+
+#subject-filter-dropdown {
+    flex: 1.3 !important; /* সাবজেক্টের নাম বড় হতে পারে তাই বেশি স্পেস দেওয়া হলো */
+    min-width: 0 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+#performance-filter-dropdown {
+    flex: 0.7 !important;
+    min-width: 0 !important;
+}
+
 
         .pause-btn-top { background-color: #fdd663; border: none; color: #000; font-size: 13px; font-weight: bold; cursor: pointer; letter-spacing: 0.5px; padding: 6px 12px; border-radius: 4px; transition: background-color 0.2s ease; flex-shrink: 0; }
         .submit-btn { background-color: #ea4335; border: none; color: #ffffff; font-size: 13px; font-weight: bold; cursor: pointer; letter-spacing: 0.5px; padding: 6px 12px; border-radius: 4px; transition: background-color 0.2s ease; flex-shrink: 0; }
@@ -148,6 +213,7 @@
         /* Result Screen */
         .result-screen { display: none; padding: 30px 20px; text-align: center; padding-bottom: 90px; }
         .result-title { font-size: 24px; color: #8ab4f8; margin-bottom: 20px; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .stat-card { background-color: #1f2124; padding: 15px; border-radius: 8px; border: 1px solid #383a3e; }
         .stat-card.full-width { grid-column: span 2; background-color: #232931; border: 1px solid #4f5b66; }
@@ -251,21 +317,25 @@
             </ul>
         </div>
 
-        <div class="inst-footer">
+                <div class="inst-footer">
             <button class="btn-start-test" onclick="startTestFromInstruction()">I Agree & Start Test</button>
         </div>
     </div>
 
     <div id="quiz-ui" style="display: none;">
-        <div class="top-header">
-            <div class="timer-section" id="top-timer-section">
-                <div class="timer-circle"></div>
-                <div>
-                    <div class="timer-text" id="timer">00:00</div>
-                    <div class="test-title" id="test-title-text" style="display: none;"></div>
+        <div class="top-header" style="display: flex !important; justify-content: space-between !important; align-items: center !important; background-color: #1f2124; padding: 12px 10px; border-bottom: 1px solid #383a3e; gap: 12px; width: 100%;">
+
+            <div class="timer-section" id="top-timer-section" style="display: flex !important; align-items: center !important; flex-shrink: 0 !important; order: 1;">
+                <div class="timer-container" style="display: flex !important; align-items: center !important; gap: 8px !important;">
+                    <svg class="timer-svg" width="28" height="28" viewBox="0 0 28 28" style="transform: rotate(-90deg); flex-shrink: 0;">
+                        <circle class="timer-bg-circle" cx="14" cy="14" r="12" stroke-width="2.5" fill="none" />
+                        <circle class="timer-progress-circle" cx="14" cy="14" r="12" stroke-width="2.5" fill="none" />
+                    </svg>
+                    <span id="timer" style="font-size: 18px !important; font-weight: bold !important; color: #ffffff !important; white-space: nowrap !important;">00:00</span>
                 </div>
             </div>
-            <div class="right-actions">
+            
+            <div class="right-actions" style="display: flex !important; align-items: center !important; gap: 8px !important; justify-content: flex-end !important; width: auto !important; flex-grow: 1 !important; order: 2;">
                 <div id="review-filter-container" style="display: none;">
                     <div>
                         <select id="subject-filter-dropdown" onchange="handleFilterChange()">
@@ -289,6 +359,7 @@
                 <button class="submit-btn" id="top-result-btn" style="display: none; background-color:#34a853; padding: 5px 10px; font-size: 12px;" onclick="showResultScreen()">RESULT</button>
                 <button class="submit-btn" id="top-submit-btn" onclick="openSubmitConfirmModal()">SUBMIT</button>
             </div>
+
         </div>
 
         <div class="number-bar-container">
@@ -354,7 +425,7 @@
                 <div class="stat-val" id="res-wrong" style="color: #f28b82;">0</div>
             </div>
             <div class="stat-card">
-                <div>নেগেটিভ নম্বর</div>
+                <div>নেগেティブ নম্বর</div>
                 <div class="stat-val" id="res-negative" style="color: #ea4335;">0</div>
             </div>
             
@@ -643,6 +714,7 @@
         document.getElementById("instruction-screen").style.display = "none";
         document.getElementById("quiz-ui").style.display = "block";
         window.history.pushState(null, null, window.location.href);
+        renderQuestion();
         startTimer();
         startQuestionTimeTracker();
     }
@@ -731,26 +803,68 @@
     }
 
     function startTimer() {
-        clearInterval(timerInterval);
-        timerInterval = setInterval(() => {
-            if(isPaused) return; 
-            
-            if(totalTime <= 0) {
-                clearInterval(timerInterval);
-                clearInterval(questionTrackerInterval);
-                localStorage.removeItem(examStorageKey); 
-                alert("⏳ আপনার পরীক্ষার নির্ধারিত সময় শেষ হয়ে গেছে! উত্তরপত্রটি স্বয়ংক্রিয়ভাবে সাবমিট করা হচ্ছে।");
-                submitMockTest(); 
-            } else {
-                totalTime--;
-                localStorage.setItem(examStorageKey, totalTime);
-                
-                let min = Math.floor(totalTime / 60).toString().padStart(2, '0');
-                let sec = (totalTime % 60).toString().padStart(2, '0');
-                document.getElementById("timer").innerText = `${min}:${sec}`;
-            }
-        }, 1000);
+    clearInterval(timerInterval);
+    
+    // ১. SVG বৃত্তের পরিধি (Circumference) হিসাব করা (সূত্র: ২ * π * r)
+    // আমাদের বৃত্তের ব্যাসার্ধ (r) হলো ১২, তাই পরিধি হবে প্রায় ৭৫.৪ পিক্সেল
+    const circumference = 2 * Math.PI * 12; 
+    
+    // HTML থেকে আমাদের প্রোগ্রেস রিংটি খুঁজে বের করা
+    const progressCircle = document.querySelector('.timer-progress-circle');
+    
+    // যদি রিংটি পাওয়া যায়, তবে শুরুতেই তার বর্ডারটিকে ফুল (৭৫.৪ পিক্সেল) করে দেওয়া
+    if (progressCircle) {
+        progressCircle.style.strokeDasharray = circumference;
     }
+
+    timerInterval = setInterval(() => {
+        if(isPaused) return; 
+        
+        if(totalTime <= 0) {
+            clearInterval(timerInterval);
+            clearInterval(questionTrackerInterval);
+            localStorage.removeItem(examStorageKey); 
+            alert("⏳ আপনার পরীক্ষার নির্ধারিত সময় শেষ হয়ে গেছে! উত্তরপত্রটি স্বয়ংক্রিয়ভাবে সাবমিট করা হচ্ছে।");
+            submitMockTest(); 
+        } else {
+            totalTime--;
+            localStorage.setItem(examStorageKey, totalTime);
+            
+            let min = Math.floor(totalTime / 60).toString().padStart(2, '0');
+            let sec = (totalTime % 60).toString().padStart(2, '0');
+            document.getElementById("timer").innerText = `${min}:${sec}`;
+
+            // ----------------------------------------------------
+            // ⚡ ২. রিং অ্যানিমেশনের আসল জাভাস্ক্রিপ্ট লজিক এখানে শুরু:
+            // ----------------------------------------------------
+            if (progressCircle) {
+                // কতো শতাংশ সময় বাকি আছে তা বের করা (যেমন: ০.৮০ মানে ৮০% সময় বাকি)
+                // এখানে TOTAL_INITIAL_TIME ব্যবহার করা হয়েছে যা পরীক্ষার শুরুর মোট সেকেন্ড
+                let progress = totalTime / TOTAL_INITIAL_TIME;
+                
+                // সময় যতটুকু কমবে, বর্ডারের অফসেট (ফাঁকা অংশ) ততটুকু বাড়বে
+                let offset = circumference * (1 - progress);
+                
+                // এই লাইনটিই মূলত রিং-এর সবুজ দাগটিকে আস্তে আস্তে ছোট করে (টেনে কমিয়ে আনে)
+                progressCircle.style.strokeDashoffset = offset;
+
+                // ৩. সময় অনুযায়ী রিং-এর রঙ পরিবর্তন করার লজিক:
+                if (progress < 0.2) {
+                    // যদি মোট সময়ের ২০% এর কম বাকি থাকে, তবে রিংটি লাল (#ea4335) হয়ে যাবে
+                    progressCircle.style.stroke = "#ea4335"; 
+                } else if (progress < 0.5) {
+                    // যদি ৫০% এর কম সময় বাকি থাকে, তবে রিংটি হলুদ (#fdd663) হয়ে যাবে
+                    progressCircle.style.stroke = "#fdd663"; 
+                } else {
+                    // বাকি পুরোটা সময় রিংটি সবুজ (#34a853) থাকবে
+                    progressCircle.style.stroke = "#34a853"; 
+                }
+            }
+            // ----------------------------------------------------
+        }
+    }, 1000);
+}
+
 
     function startQuestionTimeTracker() {
         clearInterval(questionTrackerInterval);
@@ -1236,35 +1350,48 @@
     }
 
     function showReviewMode() {
-        document.getElementById("result-ui").style.display = "none";
-        document.getElementById("quiz-ui").style.display = "block";
-        
-        document.getElementById("top-timer-section").style.display = "none"; 
-        document.getElementById("top-submit-btn").style.display = "none"; 
-        document.getElementById("pause-btn").style.display = "none"; 
-        document.getElementById("top-result-btn").style.display = "block"; 
-        document.getElementById("test-title-text").style.display = "none"; 
-        document.getElementById("live-question-timer").style.display = "none";
-        document.getElementById("result-bottom-nav").style.display = "none";
-        
-        document.getElementById("ui-status-legend-layout").innerHTML = `
-            <div class="legend-item"><div class="dot unvisited"></div> Unvisited / Skipped</div>
-            <div class="legend-item"><div class="dot rev-correct"></div> Correct (সঠিক)</div>
-            <div class="legend-item"><div class="dot rev-wrong"></div> Wrong (ভুল)</div>
-        `;
-        
-        document.getElementById("review-filter-container").style.display = "flex";
-        populateSubjectFilterDropdown();
-        
-        reviewFilterSubject = "All";
-        reviewFilterPerformance = "All";
-        document.getElementById("subject-filter-dropdown").value = "All";
-        document.getElementById("performance-filter-dropdown").value = "All";
-        updateFilteredIndices();
-        
-        currentIndex = filteredIndices.length > 0 ? filteredIndices[0] : 0;
-        renderQuestion(); 
+    document.getElementById("result-ui").style.display = "none";
+    document.getElementById("quiz-ui").style.display = "block";
+    
+    document.getElementById("top-timer-section").style.display = "none"; 
+    document.getElementById("top-submit-btn").style.display = "none"; 
+    document.getElementById("pause-btn").style.display = "none"; 
+    document.getElementById("top-result-btn").style.display = "block"; 
+    
+    // নিচে থাকা অবাস্তব 'test-title-text' এর লাইনটি এরর দূর করার জন্য মুছে দেওয়া হলো
+    
+    document.getElementById("live-question-timer").style.display = "none";
+    document.getElementById("result-bottom-nav").style.display = "none";
+    
+    document.getElementById("ui-status-legend-layout").innerHTML = `
+        <div class="legend-item"><div class="dot unvisited"></div> Unvisited / Skipped</div>
+        <div class="legend-item"><div class="dot rev-correct"></div> Correct (সঠিক)</div>
+        <div class="legend-item"><div class="dot rev-wrong"></div> Wrong (ভুল)</div>
+    `;
+    
+    // রিভিউ ফিল্টার কন্টেইনার প্রদর্শন নিশ্চিত করা
+    const filterContainer = document.getElementById("review-filter-container");
+    filterContainer.style.display = "flex";
+    
+    // ফিল্টারগুলোর প্যারেন্ট ডিরেক্টরিকে চওড়া করার জন্য ইনলাইন ফিক্স
+    if (filterContainer.firstElementChild) {
+        filterContainer.firstElementChild.style.width = "100%";
+        filterContainer.firstElementChild.style.display = "flex";
+        filterContainer.firstElementChild.style.gap = "6px";
     }
+    
+    populateSubjectFilterDropdown();
+    
+    reviewFilterSubject = "All";
+    reviewFilterPerformance = "All";
+    document.getElementById("subject-filter-dropdown").value = "All";
+    document.getElementById("performance-filter-dropdown").value = "All";
+    updateFilteredIndices();
+    
+    currentIndex = filteredIndices.length > 0 ? filteredIndices[0] : 0;
+    renderQuestion(); 
+}
+
 
     function populateSubjectFilterDropdown() {
         const dropdown = document.getElementById("subject-filter-dropdown");
