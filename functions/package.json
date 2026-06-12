@@ -1,0 +1,13 @@
+{
+  "name": "mocktest-cashfree-functions",
+  "description": "Cashfree Payment Gateway Cloud Functions for Mock Test App",
+  "engines": { "node": "20" },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.1.0",
+    "firebase-functions": "^5.0.0",
+    "node-fetch": "^2.7.0",
+    "cors": "^2.8.5"
+  },
+  "private": true
+}

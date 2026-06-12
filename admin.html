@@ -37,6 +37,19 @@ h1{ text-align:center; margin-bottom:25px; color:#333; }
 .loading{ text-align:center; margin-top:100px; font-size:22px; color:#666; }
 .denied{ text-align:center; margin-top:100px; color:red; font-size:24px; font-weight:bold; }
 .logout-btn{ background:black; color:white; border:none; padding:10px 18px; border-radius:10px; cursor:pointer; margin-bottom:20px; font-weight:bold; }
+.top-tools{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:25px; }
+.top-tools button, .top-tools a{ padding:12px 18px; border:none; border-radius:10px; background:#6c5ce7; color:white; cursor:pointer; font-weight:bold; font-size:14px; text-decoration:none; display:inline-block; }
+.top-tools button:hover, .top-tools a:hover{ background:#5a4bd1; }
+.modal-overlay{ display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:2000; }
+.modal-overlay.show{ display:flex; }
+.modal-box{ background:white; padding:25px; border-radius:15px; max-width:420px; width:90%; max-height:90vh; overflow-y:auto; }
+.modal-box h3{ margin-bottom:15px; color:#333; }
+.modal-box label{ display:block; margin:10px 0 5px; font-size:14px; font-weight:bold; color:#555; }
+.modal-box input, .modal-box select{ width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; font-size:14px; }
+.modal-actions{ display:flex; gap:10px; margin-top:20px; }
+.modal-actions button{ flex:1; padding:12px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
+.btn-save{ background:#2ecc71; color:white; }
+.btn-cancel2{ background:#aaa; color:white; }
 </style>
 </head>
 <body>
@@ -44,6 +57,84 @@ h1{ text-align:center; margin-bottom:25px; color:#333; }
 <div id="app">
   <div class="loading">Checking Admin Access...</div>
 </div>
+
+<!-- ================= PAYMENT GATEWAY SETTINGS MODAL ================= -->
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal-box">
+    <h3>💳 Payment Gateway সেটিংস</h3>
+
+    <p style="font-size:12px;color:#e67e22;background:#fff8f0;padding:8px;border-radius:6px;margin-bottom:10px;">
+      ⚡ UPI/QR সেটিংস নিচে দিন। Cashfree ঐচ্ছিক।
+    </p>
+
+    <label>📱 UPI ID (যেমন: yourname@upi)</label>
+    <input type="text" id="pg-upiId" placeholder="yourname@ybl বা yourname@paytm">
+
+    <label>🖼️ QR Code Image URL (ঐচ্ছিক)</label>
+    <input type="text" id="pg-qrCodeUrl" placeholder="QR কোডের ছবির লিংক (না দিলে UPI ID থেকে অটো তৈরি হবে)">
+
+    <label>📝 Payment Instructions (ইউজারকে কী নির্দেশনা দেখাবে)</label>
+    <textarea id="pg-upiNote" rows="3" style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;font-size:13px;" placeholder="যেমন: PhonePe/GPay দিয়ে QR স্ক্যান করুন, স্ক্রিনশট পাঠান..."></textarea>
+
+    <hr style="margin:15px 0;border-color:#eee;">
+    <p style="font-size:12px;color:#888;font-weight:bold;">Cashfree (Instant Online Payment — ঐচ্ছিক)</p>
+
+    <label>Cashfree App ID</label>
+    <input type="text" id="pg-appId" placeholder="App ID">
+
+    <label>Cashfree Secret Key</label>
+    <input type="text" id="pg-secretKey" placeholder="Secret Key">
+
+    <label>Webhook Secret</label>
+    <input type="text" id="pg-webhookSecret" placeholder="Webhook Secret (ঐচ্ছিক)">
+
+    <label>Mode</label>
+    <select id="pg-mode">
+      <option value="TEST">Test / Sandbox</option>
+      <option value="PROD">Live / Production</option>
+    </select>
+
+    <div class="modal-actions">
+      <button class="btn-cancel2" onclick="closePaymentSettings()">বাতিল</button>
+      <button class="btn-save" onclick="savePaymentSettings()">সেভ করুন</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ================= ADD EXAM CATEGORY MODAL ================= -->
+<div class="modal-overlay" id="addExamModal">
+  <div class="modal-box">
+    <h3>➕ নতুন Exam Category যোগ করুন</h3>
+
+    <label>Exam Key (ইউনিক ID, ছোট হাতে, underscore দিয়ে)</label>
+    <input type="text" id="ae-key" placeholder="যেমন: wb_police, railway, ssc_cgl">
+
+    <label>Exam নাম (বাংলা বা ইংরেজি)</label>
+    <input type="text" id="ae-name" placeholder="যেমন: WB Police Exam">
+
+    <label>Emoji Icon</label>
+    <input type="text" id="ae-icon" placeholder="যেমন: 👮 🚂 🏛️" value="📝">
+
+    <label>মূল্য (₹)</label>
+    <input type="number" id="ae-price" placeholder="যেমন: 10">
+
+    <label>মেয়াদ (দিন) — 0 হলে Lifetime</label>
+    <input type="number" id="ae-duration" placeholder="যেমন: 180" value="180">
+
+    <p style="font-size:12px;color:#888;margin-top:10px;">
+      এই তথ্য <b>config/examCategories</b> Firestore ডকুমেন্টে সেভ হবে।
+      Dashboard ও Payment পেজ স্বয়ংক্রিয়ভাবে আপডেট হবে।
+    </p>
+
+    <div class="modal-actions">
+      <button class="btn-cancel2" onclick="closeAddExamModal()">বাতিল</button>
+      <button class="btn-save" onclick="saveNewExamCategory()">যোগ করুন</button>
+    </div>
+  </div>
+</div>
+
+
 
 <script>
 // ================= FIREBASE CONFIG =================
@@ -80,6 +171,11 @@ function loadAdminPanel(){
   <div class="container">
     <button class="logout-btn" onclick="logout()">Logout</button>
     <h1>Admin Control Dashboard</h1>
+    <div class="top-tools">
+      <button onclick="openPaymentSettings()">💳 Payment/UPI সেটিংস</button>
+      <button onclick="openAddExamModal()">➕ নতুন Exam Category যোগ করুন</button>
+      <a href="purchase-history.html">📋 Purchase History</a>
+    </div>
     <div class="stats">
       <div class="card"><h2 id="totalUsers">0</h2><p>Total Users</p></div>
       <div class="card"><h2 id="paidUsers">0</h2><p>Paid Users</p></div>
@@ -148,12 +244,24 @@ async function searchUser(){
       
       // ড্যাশবোর্ডের সাথে সামঞ্জস্য রেখে purchasedExams অবজেক্ট ব্যবহার করা হয়েছে
       const purchases = user.purchasedExams || {};
+      const expiry = user.examExpiry || {};
 
-      // 💡 ফলব্যাক মেকানিজম: কোনো এক্সাম অবজেক্টে না থাকলে ডিফল্ট বা স্বয়ংক্রিয়ভাবে লক (false) দেখাবে
+      // 💡 ফলব্যাক মেকানিজম: কোনো এক্সাম অবজেক্টে না থাকলে ডিফল্ট বা স্বয়ংক্রিয়ভাবে লক (false) দেখাবে
       const wb_police_status = purchases.wb_police === true;
       const wbpsc_status = purchases.wbpsc === true;
       const railway_status = purchases.railway === true;
-      const tet_status = purchases.tet === true; 
+      const tet_status = purchases.tet === true;
+
+      function expiryText(examKey, isActive){
+        if(!isActive) return "";
+        const exp = expiry[examKey];
+        if(!exp) return " <span style='color:#888;'>(Lifetime / মেয়াদ নেই)</span>";
+        const d = exp.toDate ? exp.toDate() : new Date(exp);
+        const now = new Date();
+        const daysLeft = Math.ceil((d - now) / (1000*60*60*24));
+        if(daysLeft <= 0) return " <span style='color:#e74c3c;'>(মেয়াদ শেষ হয়ে গেছে: "+d.toLocaleDateString('en-GB')+")</span>";
+        return " <span style='color:#f39c12;'>(মেয়াদ শেষ: "+d.toLocaleDateString('en-GB')+" — আর "+daysLeft+" দিন)</span>";
+      }
 
       resultDiv.innerHTML = `
         <div class="user-card">
@@ -164,23 +272,23 @@ async function searchUser(){
           
           <div class="exam-status-list">
             <h3 style="margin-bottom:10px; font-size:16px; color:#111;">Exam Purchase Status:</h3>
-            <p><strong>1. WB Police Exam Category:</strong> ${wb_police_status ? "<span style='color:#2ecc71;font-weight:bold;'>✅ Active (Unlocked)</span>" : "<span style='color:#e74c3c;font-weight:bold;'>🔒 Blocked (Locked)</span>"}</p>
-            <p><strong>2. WBPSC Exam Category:</strong> ${wbpsc_status ? "<span style='color:#2ecc71;font-weight:bold;'>✅ Active (Unlocked)</span>" : "<span style='color:#e74c3c;font-weight:bold;'>🔒 Blocked (Locked)</span>"}</p>
-            <p><strong>3. Railway Exam Category:</strong> ${railway_status ? "<span style='color:#2ecc71;font-weight:bold;'>✅ Active (Unlocked)</span>" : "<span style='color:#e74c3c;font-weight:bold;'>🔒 Blocked (Locked)</span>"}</p>
-            <p><strong>4. WB TET Exam Category:</strong> ${tet_status ? "<span style='color:#2ecc71;font-weight:bold;'>✅ Active (Unlocked)</span>" : "<span style='color:#e74c3c;font-weight:bold;'>🔒 Blocked (Locked)</span>"}</p>
+            <p><strong>1. WB Police Exam Category:</strong> ${wb_police_status ? "<span style='color:#2ecc71;font-weight:bold;'>✅ Active (Unlocked)</span>" : "<span style='color:#e74c3c;font-weight:bold;'>🔒 Blocked (Locked)</span>"}${expiryText('wb_police', wb_police_status)}</p>
+            <p><strong>2. WBPSC Exam Category:</strong> ${wbpsc_status ? "<span style='color:#2ecc71;font-weight:bold;'>✅ Active (Unlocked)</span>" : "<span style='color:#e74c3c;font-weight:bold;'>🔒 Blocked (Locked)</span>"}${expiryText('wbpsc', wbpsc_status)}</p>
+            <p><strong>3. Railway Exam Category:</strong> ${railway_status ? "<span style='color:#2ecc71;font-weight:bold;'>✅ Active (Unlocked)</span>" : "<span style='color:#e74c3c;font-weight:bold;'>🔒 Blocked (Locked)</span>"}${expiryText('railway', railway_status)}</p>
+            <p><strong>4. WB TET Exam Category:</strong> ${tet_status ? "<span style='color:#2ecc71;font-weight:bold;'>✅ Active (Unlocked)</span>" : "<span style='color:#e74c3c;font-weight:bold;'>🔒 Blocked (Locked)</span>"}${expiryText('tet', tet_status)}</p>
           </div>
 
           <div class="buttons">
-            <button class="active" onclick="toggleExam('${uid}','wb_police',true)">Activate WB Police</button>
+            <button class="active" onclick="activateExamWithDuration('${uid}','wb_police')">Activate WB Police</button>
             <button class="block" onclick="toggleExam('${uid}','wb_police',false)">Block WB Police</button>
 
-            <button class="active" onclick="toggleExam('${uid}','wbpsc',true)">Activate WBPSC</button>
+            <button class="active" onclick="activateExamWithDuration('${uid}','wbpsc')">Activate WBPSC</button>
             <button class="block" onclick="toggleExam('${uid}','wbpsc',false)">Block WBPSC</button>
 
-            <button class="active" onclick="toggleExam('${uid}','railway',true)">Activate Railway</button>
+            <button class="active" onclick="activateExamWithDuration('${uid}','railway')">Activate Railway</button>
             <button class="block" onclick="toggleExam('${uid}','railway',false)">Block Railway</button>
 
-            <button class="active" onclick="toggleExam('${uid}','tet',true)">Activate TET</button>
+            <button class="active" onclick="activateExamWithDuration('${uid}','tet')">Activate TET</button>
             <button class="block" onclick="toggleExam('${uid}','tet',false)">Block TET</button>
           </div>
         </div>
@@ -193,19 +301,142 @@ async function searchUser(){
   }
 }
 
-// ================= TOGGLE EXAM =================
+// ================= TOGGLE EXAM (Block / Manual Toggle) =================
 async function toggleExam(uid, examName, status){
   try{
-    // অবজেক্টের ডট নোটেশন দিয়ে সুনির্দিষ্ট এক্সাম ক্যাটাগরি আপডেট বা অটো-তৈরি করা হচ্ছে
-    await db.collection("users").doc(uid).update({
-      [`purchasedExams.${examName}`]: status
-    });
+    const updateData = { [`purchasedExams.${examName}`]: status };
+    if(status === false){
+      // ব্লক করার সময় মেয়াদ তথ্যও মুছে দেওয়া হলো
+      updateData[`examExpiry.${examName}`] = null;
+    }
+    await db.collection("users").doc(uid).update(updateData);
 
     alert("User access updated successfully!");
-    searchUser(); // আপডেট হওয়ার পর ডাটা স্বয়ংক্রিয়ভাবে রিফ্রেশ করবে
+    searchUser();
   }catch(error){
     console.error("Update error:", error);
     alert("Failed to update user access. Please try again.");
+  }
+}
+
+// ================= ACTIVATE WITH SUBSCRIPTION DURATION =================
+async function activateExamWithDuration(uid, examName){
+  const input = prompt(
+    "এই এক্সামের অ্যাক্সেস কতদিনের জন্য একটিভ করতে চান?\n\n" +
+    "দিনের সংখ্যা লিখুন (যেমন: 30, 90, 180, 365)\n" +
+    "লাইফটাইম অ্যাক্সেসের জন্য 0 লিখুন।",
+    "30"
+  );
+
+  if(input === null) return;
+
+  const days = parseInt(input, 10);
+  if(isNaN(days) || days < 0){
+    alert("সঠিক সংখ্যা লিখুন (0 বা তার বেশি)।");
+    return;
+  }
+
+  try{
+    const updateData = { [`purchasedExams.${examName}`]: true };
+
+    if(days === 0){
+      updateData[`examExpiry.${examName}`] = null;
+    } else {
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + days);
+      updateData[`examExpiry.${examName}`] = firebase.firestore.Timestamp.fromDate(expiryDate);
+    }
+
+    await db.collection("users").doc(uid).update(updateData);
+
+    alert(days === 0
+      ? "✅ লাইফটাইম অ্যাক্সেস চালু করা হলো!"
+      : `✅ অ্যাক্সেস চালু করা হলো! মেয়াদ থাকবে আজ থেকে ${days} দিন।`);
+
+    searchUser();
+  }catch(error){
+    console.error("Activation error:", error);
+    alert("Failed to activate access. Please try again.");
+  }
+}
+
+// ================= PAYMENT GATEWAY SETTINGS MODAL =================
+function openAddExamModal(){
+  document.getElementById("addExamModal").classList.add("show");
+}
+function closeAddExamModal(){
+  document.getElementById("addExamModal").classList.remove("show");
+}
+async function saveNewExamCategory(){
+  const key      = document.getElementById("ae-key").value.trim().toLowerCase().replace(/\s+/g,'_');
+  const name     = document.getElementById("ae-name").value.trim();
+  const icon     = document.getElementById("ae-icon").value.trim() || "📝";
+  const price    = document.getElementById("ae-price").value.trim();
+  const duration = document.getElementById("ae-duration").value.trim() || "180";
+
+  if(!key || !name || !price){
+    alert("Exam Key, নাম এবং মূল্য আবশ্যক।");
+    return;
+  }
+  try{
+    await db.collection("config").doc("examCategories").set({
+      [key]: { name, icon, price: Number(price), durationDays: Number(duration), active: true }
+    }, { merge: true });
+    alert(`✅ "${name}" সফলভাবে যোগ হয়েছে!`);
+    closeAddExamModal();
+  }catch(e){
+    alert("❌ সমস্যা হয়েছে: " + e.message);
+  }
+}
+
+async function openPaymentSettings(){
+  document.getElementById("paymentModal").classList.add("show");
+  try{
+    const snap = await db.collection("config").doc("paymentGateway").get();
+    if(snap.exists){
+      const d = snap.data();
+      document.getElementById("pg-upiId").value         = d.upiId         || "";
+      document.getElementById("pg-qrCodeUrl").value     = d.qrCodeUrl     || "";
+      document.getElementById("pg-upiNote").value       = d.upiNote       || "";
+      document.getElementById("pg-appId").value         = d.appId         || "";
+      document.getElementById("pg-secretKey").value     = d.secretKey     || "";
+      document.getElementById("pg-webhookSecret").value = d.webhookSecret || "";
+      document.getElementById("pg-mode").value          = d.mode          || "TEST";
+    }
+  }catch(error){
+    console.log("Payment settings load error:", error);
+  }
+}
+
+function closePaymentSettings(){
+  document.getElementById("paymentModal").classList.remove("show");
+}
+
+async function savePaymentSettings(){
+  const upiId         = document.getElementById("pg-upiId").value.trim();
+  const qrCodeUrl     = document.getElementById("pg-qrCodeUrl").value.trim();
+  const upiNote       = document.getElementById("pg-upiNote").value.trim();
+  const appId         = document.getElementById("pg-appId").value.trim();
+  const secretKey     = document.getElementById("pg-secretKey").value.trim();
+  const webhookSecret = document.getElementById("pg-webhookSecret").value.trim();
+  const mode          = document.getElementById("pg-mode").value;
+
+  if(!upiId && !appId){
+    alert("অন্তত UPI ID অথবা Cashfree App ID দিতে হবে।");
+    return;
+  }
+
+  try{
+    await db.collection("config").doc("paymentGateway").set({
+      upiId, qrCodeUrl, upiNote,
+      appId, secretKey, webhookSecret, mode,
+      updatedAt: new Date()
+    }, { merge: true });
+    alert("✅ Payment সেটিংস সফলভাবে সেভ হয়েছে!");
+    closePaymentSettings();
+  }catch(error){
+    console.error("Save error:", error);
+    alert("সেভ করতে সমস্যা হয়েছে।");
   }
 }
 

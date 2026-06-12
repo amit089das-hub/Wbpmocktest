@@ -163,20 +163,20 @@
             <div class="nav-icon">📝</div>
             <span>Tests</span>
         </a>
+        <a href="settings.html" class="nav-item">
+            <div class="nav-icon">⚙️</div>
+            <span>Settings</span>
+        </a>
         <a href="https://wa.me/916294005916?text=নমস্কার,%20আমার%20একটি%20সমস্যা%20হচ্ছে।" target="_blank" class="nav-item" style="color: #25D366;">
             <div class="nav-icon">💬</div>
             <span>WhatsApp</span>
         </a>
-        <button class="nav-item" id="btn-logout">
-            <div class="nav-icon">🚪</div>
-            <span>Logout</span>
-        </button>
     </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -253,7 +253,8 @@
                 const userDocSnap = await getDoc(userDocRef);
 
                 if (userDocSnap.exists()) {
-                    const userData = userDocSnap.data();
+                    let userData = userDocSnap.data();
+                    userData = await checkAndDeactivateExpiredExams(userDocRef, userData);
                     localStorage.setItem(`user_data_${user.uid}`, JSON.stringify(userData));
                     processUserData(userData, user);
                 }
@@ -264,6 +265,40 @@
             }
         }
     });
+
+    // ⏳ [Subscription Expiry Check] - মেয়াদ শেষ হওয়া এক্সাম স্বয়ংক্রিয়ভাবে ডিএক্টিভ করা
+    async function checkAndDeactivateExpiredExams(userDocRef, userData) {
+        const purchased = userData.purchasedExams || {};
+        const expiry = userData.examExpiry || {};
+        const now = new Date();
+        const updates = {};
+        let changed = false;
+
+        Object.keys(expiry).forEach(examKey => {
+            const exp = expiry[examKey];
+            if (!exp) return; // lifetime, no expiry
+            if (purchased[examKey] !== true) return; // already inactive
+
+            const expDate = exp.toDate ? exp.toDate() : new Date(exp.seconds ? exp.seconds * 1000 : exp);
+            if (expDate <= now) {
+                updates[`purchasedExams.${examKey}`] = false;
+                purchased[examKey] = false;
+                changed = true;
+            }
+        });
+
+        if (changed) {
+            try {
+                await updateDoc(userDocRef, updates);
+            } catch (e) {
+                console.error("Expiry update error:", e);
+            }
+            userData.purchasedExams = purchased;
+        }
+
+        return userData;
+    }
+
 
     function processUserData(userData, user) {
         const finalName = userData.name || user.displayName || "User";
@@ -360,17 +395,7 @@
         });
     }
 
-    const logoutBtn = document.getElementById('btn-logout');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            if(confirm("আপনি কি নিশ্চিতভাবে লগআউট করতে চান?")) {
-                localStorage.clear(); 
-                signOut(auth).then(() => { 
-                    window.location.href = "login.html"; 
-                }).catch(error => console.error("Logout Error:", error));
-            }
-        });
-    }
+    // লগআউট এখন settings.html পেজ থেকে করা যাবে
 
     const adminPanelBtn = document.getElementById('btn-admin-panel');
     if (adminPanelBtn) {

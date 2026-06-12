@@ -5,169 +5,263 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="manifest.json">
     <script src="pwa-install.js"></script>
-<meta name="theme-color" content="#121212">
-<meta name="mobile-web-app-capable" content="yes">
-    <title>Premium Payment Portal</title>
+    <meta name="theme-color" content="#121212">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Payment - MockTest</title>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: sans-serif; background-color: #121212; color: white; text-align: center; padding: 15px; margin: 0; }
-        
-        .payment-box { 
-            background: #1e1e1e; 
-            padding: 25px 20px; \n            border-radius: 10px; 
-            display: inline-block; 
-            max-width: 450px; 
-            width: 100%; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
-            margin-top: 20px;
-        }
-        
-        h2 { color: #f1c40f; margin-top: 0; font-size: 22px; }
-        .exam-name { font-weight: bold; color: #4a90e2; font-size: 18px; margin: 10px 0; }
-        .price { font-size: 30px; color: #2ecc71; margin: 10px 0; font-weight: bold; }
-        
-        .instamojo-btn {
-            display: inline-block;
-            background: #130f40;
-            color: #ffbe76;
-            text-decoration: none;
-            padding: 14px 20px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 5px;
-            margin: 15px 0;
-            width: 100%;
-            border: 2px solid #ffbe76;
-            transition: 0.3s;
-        }
-        .instamojo-btn:hover {
-            background: #ffbe76;
-            color: #130f40;
+        body { font-family: sans-serif; background-color: #121212; color: white; text-align: center; padding: 20px 15px; margin: 0; min-height: 100vh; }
+
+        .back-btn { display: inline-flex; align-items: center; gap: 6px; color: #aaa; font-size: 14px; text-decoration: none; margin-bottom: 15px; float: left; }
+
+        .payment-box {
+            background: #1e1e1e; padding: 25px 20px; border-radius: 12px;
+            max-width: 450px; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            margin: 10px auto 0 auto; text-align: left; clear: both;
         }
 
-        .btn-whatsapp { 
-            display: inline-block; 
-            background-color: #25D366; 
-            color: white; 
-            text-decoration: none; 
-            padding: 12px 20px; 
-            font-size: 15px; 
-            font-weight: bold; 
-            border-radius: 5px; 
-            width: 100%;
-            margin-top: 10px;
+        .exam-header { text-align: center; margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid #2a2a2a; }
+        .exam-header h2 { color: #f1c40f; margin: 0 0 8px 0; font-size: 20px; }
+        .exam-name-tag { font-size: 22px; font-weight: bold; color: #4a90e2; }
+        .price-tag { font-size: 36px; color: #2ecc71; font-weight: bold; margin: 8px 0 4px; }
+        .duration-tag { font-size: 13px; color: #aaa; }
+
+        /* ===== QR SECTION ===== */
+        .qr-section { text-align: center; margin: 18px 0; }
+        .qr-section h3 { font-size: 15px; color: #eee; margin-bottom: 12px; }
+        .qr-box {
+            background: white; padding: 12px; border-radius: 10px;
+            display: inline-block; margin-bottom: 10px;
         }
-        
-        .notice { font-size: 12px; color: #aaa; margin-top: 15px; line-height: 1.4; text-align: left; }
+        .qr-box img { width: 160px; height: 160px; display: block; }
+        .qr-loading { width: 160px; height: 160px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border-radius: 6px; margin: 0 auto; }
+        .upi-id-display {
+            font-size: 15px; font-weight: bold; color: #2ecc71;
+            background: rgba(46,204,113,0.1); padding: 8px 14px;
+            border-radius: 8px; display: inline-block; margin-bottom: 6px;
+            border: 1px solid rgba(46,204,113,0.3);
+        }
+
+        .upi-instruction {
+            background: #252525; border-radius: 10px; padding: 14px;
+            font-size: 13px; color: #ccc; line-height: 1.7; margin: 14px 0;
+            border-left: 3px solid #f1c40f;
+        }
+        .upi-instruction b { color: #f1c40f; }
+
+        /* ===== CASHFREE SECTION ===== */
+        .cashfree-btn {
+            display: block; background: linear-gradient(90deg, #11998e, #38ef7d);
+            color: #0a0a0a; padding: 14px 20px; font-size: 16px; font-weight: bold;
+            border-radius: 8px; margin: 15px 0; width: 100%; border: none; cursor: pointer; transition: 0.3s;
+        }
+        .cashfree-btn:hover { opacity: 0.9; }
+        .cashfree-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .or-divider { margin: 18px 0; color: #555; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .or-divider::before, .or-divider::after { content: ""; flex: 1; height: 1px; background: #333; }
+
+        .btn-whatsapp {
+            display: block; background-color: #25D366; color: white;
+            text-decoration: none; padding: 12px 20px; font-size: 15px;
+            font-weight: bold; border-radius: 8px; width: 100%; text-align: center;
+        }
+
+        .status-msg { font-size: 13px; margin-top: 8px; min-height: 18px; text-align: center; }
+        .section-label { font-size: 12px; color: #888; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
     </style>
 </head>
 <body>
 
-    <div class="payment-box">
-        <h2>Premium Test Unlock 🔒</h2>
-        <p>নিচের বাটনে ক্লিক করে পেমেন্ট সম্পন্ন করুন।</p>
-        
-        <div class="exam-name" id="display-exam-name">Loading Exam...</div>
-        <div class="price" id="display-price">₹00</div>
-
-        <a href="#" class="instamojo-btn" id="pay-via-app">💳 PAY VIA INSTAMOJO</a>
-
-        <p style="font-size: 14px; margin: 15px 0 5px 0; color: #eee;">পেমেন্ট করার পর স্ক্রিনশট নিচে পাঠান:</p>
-        
-        <a href="#" class="btn-whatsapp" id="btn-verify-payment">💬 SEND PAYMENT SCREENSHOT</a>
-
-        <div class="notice">
-            📌 <b>নির্দেশনাবলী:</b><br>
-            ১. "PAY VIA INSTAMOJO" বাটনে ক্লিক করে পেমেন্ট করুন।<br>
-            ২. পেমেন্ট সফল হলে একটি স্ক্রিনশট নিন।<br>
-            ৩. নিচের "SEND PAYMENT SCREENSHOT" বাটনে ক্লিক করে আমাদের হোয়াটসঅ্যাপে স্ক্রিনশটটি পাঠান। ১০-১৫ মিনিটের মধ্যে আপনার কোর্স চালু করে দেওয়া হবে।
-        </div>
+    <div style="max-width:450px; margin: 0 auto;">
+        <a href="javascript:history.back()" class="back-btn">← ফিরে যান</a>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-       import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <div class="payment-box">
+        <!-- Exam Info -->
+        <div class="exam-header">
+            <h2>🔓 Premium Test Unlock</h2>
+            <div class="exam-name-tag" id="display-exam-name">লোড হচ্ছে...</div>
+            <div class="price-tag" id="display-price">₹--</div>
+            <div class="duration-tag" id="display-duration"></div>
+        </div>
 
-        const firebaseConfig = {
-          apiKey: "AIzaSyCoBw6-MTBXtIJPEvP9qB7I3JFpJ7MZM5I",
-          authDomain: "mocktest0.firebaseapp.com",
-          projectId: "mocktest0",
-          storageBucket: "mocktest0.firebasestorage.app",
-          messagingSenderId: "251833325363",
-          appId: "1:251833325363:web:8bdd09a4b717bf045e9046",
-          measurementId: "G-6P2P3WS42H"
-        };
+        <!-- QR Code Section -->
+        <div class="qr-section">
+            <h3>📱 UPI / QR কোডে পেমেন্ট করুন</h3>
+            <div class="qr-box">
+                <div class="qr-loading" id="qr-loading">
+                    <span style="color:#999; font-size:12px;">QR লোড হচ্ছে...</span>
+                </div>
+                <img id="qr-img" style="display:none;" alt="UPI QR Code">
+            </div>
+            <div class="upi-id-display" id="upi-id-display">লোড হচ্ছে...</div>
+        </div>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager()
-  })
-});
+        <div class="upi-instruction" id="upi-instruction">
+            <b>📌 পেমেন্ট করার পদ্ধতি:</b><br>
+            ১. উপরের QR কোড স্ক্যান করুন অথবা UPI ID কপি করুন।<br>
+            ২. পেমেন্ট সম্পন্ন করুন এবং <b>স্ক্রিনশট</b> নিন।<br>
+            ৩. নিচের WhatsApp বাটনে ক্লিক করে স্ক্রিনশট পাঠান।<br>
+            ৪. ১০-১৫ মিনিটের মধ্যে আপনার টেস্ট আনলক হয়ে যাবে।
+        </div>
 
-        const MY_WHATSAPP_NUMBER = "916294005916";
+        <div class="section-label">স্ক্রিনশট পাঠান</div>
+        <a href="#" class="btn-whatsapp" id="btn-verify-payment">
+            💬 WhatsApp-এ স্ক্রিনশট পাঠান
+        </a>
 
-        // এক্সাম ডেটাবেস ডিকশনারি (ড্যাশবোর্ড অনুযায়ী সেট করা)
-        const examDetails = {
-            "wb_police": {
-                name: "WB Police",
-                price: "10",
-                link: "https://imjo.in/YourWBPoliceLink" // 👈 আপনার আসল ইনস্টামোজো লিংক এখানে বসান
-            },
-            "wbpsc": {
-                name: "WBPSC Exam",
-                price: "15",
-                link: "https://imjo.in/YourWBPSCLink"   // 👈 আপনার আসল ইনস্টামোজো লিংক এখানে বসান
-            },
-            "railway": {
-                name: "Railway Exam",
-                price: "20",
-                link: "https://imjo.in/YourRailwayLink" // 👈 আপনার আসল ইনস্টামোজো লিংক এখানে বসান
-            }
-        };
+        <div class="or-divider">অথবা অনলাইনে পেমেন্ট করুন</div>
 
-        // URL থেকে 'exam' প্যারামিটার তুলে নেওয়ার কোড
-        const urlParams = new URLSearchParams(window.location.search);
-        const examKey = urlParams.get('exam') || 'wb_police'; // কোনো কারণে না পেলে ডিফল্ট wb_police
+        <!-- Cashfree Section -->
+        <div class="section-label">Instant Online Payment</div>
+        <button class="cashfree-btn" id="pay-cashfree">⚡ PAY NOW (Cashfree)</button>
+        <div class="status-msg" id="cashfree-status"></div>
+    </div>
 
-        // ডাটাবেস থেকে তথ্য নেওয়া হচ্ছে
-        const currentExam = examDetails[examKey] || examDetails["wb_police"];
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const currentExamName = currentExam.name;
-        const currentPrice = currentExam.price;
-        const currentInstamojoLink = currentExam.link;
+    const firebaseConfig = {
+        apiKey: "AIzaSyCoBw6-MTBXtIJPEvP9qB7I3JFpJ7MZM5I",
+        authDomain: "mocktest0.firebaseapp.com",
+        projectId: "mocktest0",
+        storageBucket: "mocktest0.firebasestorage.app",
+        messagingSenderId: "251833325363",
+        appId: "1:251833325363:web:8bdd09a4b717bf045e9046"
+    };
 
-        // UI-তে ডাটা অটোমেটিক বসানো হচ্ছে
-        document.getElementById('display-exam-name').innerText = currentExamName;
-        document.getElementById('display-price').innerText = "₹" + currentPrice;
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = initializeFirestore(app, {
+        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+    });
 
-        onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                window.location.href = "login.html";
+    const CLOUD_FUNCTIONS_BASE = "https://YOUR_PROJECT.vercel.app/api";
+    const MY_WHATSAPP_NUMBER   = "916294005916";
+
+    // URL থেকে exam info নেওয়া
+    const params    = new URLSearchParams(window.location.search);
+    const examKey   = params.get('exam')  || 'wb_police';
+    const examName  = decodeURIComponent(params.get('name')  || 'Exam');
+    const examPrice = params.get('price') || '10';
+    const examDuration = parseInt(params.get('duration') || '180');
+
+    // UI-তে exam info দেখানো
+    document.getElementById('display-exam-name').innerText = examName;
+    document.getElementById('display-price').innerText     = '₹' + examPrice;
+    document.getElementById('display-duration').innerText  = examDuration > 0
+        ? `⏳ মেয়াদ: ${examDuration} দিন`
+        : `♾️ মেয়াদ: Lifetime`;
+
+    // ===== Firestore থেকে UPI config লোড =====
+    async function loadUpiConfig() {
+        try {
+            const snap = await getDoc(doc(db, "config", "paymentGateway"));
+            if (!snap.exists()) return;
+            const cfg = snap.data();
+
+            const upiId    = cfg.upiId    || "";
+            const qrUrl    = cfg.qrCodeUrl || "";
+            const customNote = cfg.upiNote || "";
+
+            // UPI ID দেখানো
+            if (upiId) {
+                document.getElementById('upi-id-display').innerText = upiId;
             } else {
-                // ইনস্টামোজো লিংক বাটনে অটোমেটিক সেট করা হলো
-                document.getElementById('pay-via-app').href = currentInstamojoLink;
-
-                const displayName = user.displayName || user.email.split('@')[0];
-                const userEmail = user.email || "N/A";
-                const userId = user.uid;
-
-                // হোয়াটসঅ্যাপ টেক্সট মেসেজ জেনারেটর
-                const whatsappMessage = `নমস্কার, আমি পেমেন্ট করেছি। দয়া করে আমার টেস্টটি আনলক করে দিন।\n\n` +
-                                        `📝 নাম: ${displayName}\n` +
-                                        `📧 ইমেইল: ${userEmail}\n` +
-                                        `🆔 ইউজার আইডি: ${userId}\n` +
-                                        `📚 কোর্স/পরীক্ষা: ${currentExamName}\n` +
-                                        `💰 টাকার পরিমাণ: ₹${currentPrice}`;
-
-                const whatsappUrl = `https://wa.me/${MY_WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`;
-                
-                document.getElementById('btn-verify-payment').href = whatsappUrl;
-                document.getElementById('btn-verify-payment').target = "_blank";
+                document.getElementById('upi-id-display').innerText = "UPI ID সেট করা হয়নি";
             }
-        });
-    </script>
+
+            // QR Code দেখানো
+            const qrImg     = document.getElementById('qr-img');
+            const qrLoading = document.getElementById('qr-loading');
+            if (qrUrl) {
+                qrImg.src = qrUrl;
+                qrImg.style.display = 'block';
+                qrLoading.style.display = 'none';
+            } else if (upiId) {
+                // UPI ID দিয়ে QR generate করা
+                const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent('upi://pay?pa=' + upiId + '&pn=MockTest&am=' + examPrice + '&cu=INR')}`;
+                qrImg.src = qrApiUrl;
+                qrImg.style.display = 'block';
+                qrLoading.style.display = 'none';
+            }
+
+            // Custom note থাকলে দেখানো
+            if (customNote) {
+                document.getElementById('upi-instruction').innerHTML =
+                    `<b>📌 নির্দেশনা:</b><br>${customNote.replace(/\n/g,'<br>')}`;
+            }
+        } catch(e) {
+            console.error("UPI config load error:", e);
+            document.getElementById('upi-id-display').innerText = "লোড করতে সমস্যা হয়েছে";
+        }
+    }
+
+    loadUpiConfig();
+
+    let currentUserObj = null;
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) { window.location.href = "login.html"; return; }
+        currentUserObj = user;
+
+        const displayName = user.displayName || user.email.split('@')[0];
+        const whatsappMsg = `নমস্কার, আমি পেমেন্ট করেছি। দয়া করে টেস্টটি আনলক করে দিন।\n\n` +
+                            `📝 নাম: ${displayName}\n` +
+                            `📧 ইমেইল: ${user.email}\n` +
+                            `🆔 UID: ${user.uid}\n` +
+                            `📚 পরীক্ষা: ${examName}\n` +
+                            `💰 পরিমাণ: ₹${examPrice}`;
+
+        document.getElementById('btn-verify-payment').href   = `https://wa.me/${MY_WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMsg)}`;
+        document.getElementById('btn-verify-payment').target = "_blank";
+    });
+
+    // ===== Cashfree Payment =====
+    const cashfreeBtn = document.getElementById('pay-cashfree');
+    cashfreeBtn.addEventListener('click', async () => {
+        if (!currentUserObj) return;
+        const statusEl = document.getElementById('cashfree-status');
+        cashfreeBtn.disabled = true;
+        statusEl.style.color = "#aaa";
+        statusEl.innerText = "পেমেন্ট পেজ লোড হচ্ছে...";
+
+        try {
+            const cfgSnap = await getDoc(doc(db, "config", "paymentGateway"));
+            if (!cfgSnap.exists()) throw new Error("Payment gateway সেট করা হয়নি।");
+            const cfg = cfgSnap.data();
+            const cfMode = cfg.mode === "PROD" ? "production" : "sandbox";
+
+            const response = await fetch(`${CLOUD_FUNCTIONS_BASE}/createCashfreeOrder`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    uid: currentUserObj.uid,
+                    examKey, examName, amount: examPrice,
+                    durationDays: examDuration,
+                    customerEmail: currentUserObj.email,
+                    customerName: currentUserObj.displayName || currentUserObj.email.split('@')[0],
+                    returnUrl: window.location.origin + "/payment-status.html"
+                })
+            });
+
+            const result = await response.json();
+            if (!response.ok || !result.paymentSessionId)
+                throw new Error(result.error || "Order তৈরি করতে সমস্যা হয়েছে।");
+
+            const cashfree = Cashfree({ mode: cfMode });
+            cashfree.checkout({ paymentSessionId: result.paymentSessionId, redirectTarget: "_self" });
+
+        } catch (err) {
+            statusEl.style.color = "#e74c3c";
+            statusEl.innerText = "⚠️ " + err.message;
+            cashfreeBtn.disabled = false;
+        }
+    });
+</script>
+<script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
 </body>
 </html>

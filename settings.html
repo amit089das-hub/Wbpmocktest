@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>সেটিংস - My Account</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="pwa-install.js"></script>
+    <meta name="theme-color" content="#121212">
+    <meta name="mobile-web-app-capable" content="yes">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px 15px 90px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .top-header { width: 100%; max-width: 600px; padding: 10px 5px; margin-bottom: 10px; }
+        .top-header h2 { margin: 0; font-size: 22px; color: #ffffff; }
+
+        .section-title { width: 100%; max-width: 600px; font-size: 17px; margin: 20px 0 10px 5px; color: #2ecc71; }
+
+        .card {
+            width: 100%;
+            max-width: 600px;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            padding: 18px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .field-group { margin-bottom: 14px; }
+        .field-group label { display: block; font-size: 13px; color: #aaa; margin-bottom: 6px; }
+        .field-group input {
+            width: 100%; padding: 10px; border-radius: 6px;
+            border: 1px solid #333; background: #2a2a2a; color: #fff;
+            font-size: 15px; outline: none;
+        }
+        .field-group input:disabled { color: #888; }
+        .field-group input:focus { border-color: #2ecc71; }
+
+        .btn-save {
+            background: #2ecc71; color: #fff; border: none;
+            padding: 12px; border-radius: 6px; width: 100%;
+            font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 5px;
+        }
+        .btn-save:hover { background: #27ae60; }
+
+        .exam-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 0; border-bottom: 1px solid #2a2a2a;
+        }
+        .exam-row:last-child { border-bottom: none; }
+        .exam-name { font-size: 15px; font-weight: bold; }
+        .exam-sub { font-size: 12px; color: #888; margin-top: 3px; }
+        .status-active { color: #2ecc71; font-weight: bold; font-size: 13px; }
+        .status-expiring { color: #f39c12; font-weight: bold; font-size: 13px; }
+        .status-locked { color: #e74c3c; font-weight: bold; font-size: 13px; }
+        .status-lifetime { color: #4a90e2; font-weight: bold; font-size: 13px; }
+
+        .btn-logout {
+            background: #e74c3c; color: #fff; border: none;
+            padding: 12px; border-radius: 6px; width: 100%;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+        }
+        .btn-logout:hover { background: #c0392b; }
+
+        .toast {
+            position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+            background: #2ecc71; color: #fff; padding: 10px 20px; border-radius: 20px;
+            font-size: 14px; display: none; z-index: 2000;
+        }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background-color: #1e1e1e; border-top: 1px solid #333;
+            height: 70px; display: flex; justify-content: space-around; align-items: center;
+            z-index: 1000; width: 100%;
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #aaa; text-decoration: none; font-size: 12px; cursor: pointer; background: none; border: none; padding: 5px; }
+        .nav-item.active { color: #2ecc71; }
+        .nav-icon { font-size: 20px; margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="top-header">
+        <h2>⚙️ সেটিংস (My Account)</h2>
+    </div>
+
+    <h3 class="section-title">প্রোফাইল তথ্য</h3>
+    <div class="card">
+        <div class="field-group">
+            <label for="userName">আপনার নাম</label>
+            <input type="text" id="userName" placeholder="আপনার নাম লিখুন">
+        </div>
+        <div class="field-group">
+            <label for="userEmail">ইমেইল আইডি</label>
+            <input type="text" id="userEmail" disabled>
+        </div>
+        <div class="field-group">
+            <label for="userMobile">মোবাইল নম্বর</label>
+            <input type="text" id="userMobile" disabled>
+        </div>
+        <button class="btn-save" id="btn-save-name">নাম সেভ করুন</button>
+    </div>
+
+    <h3 class="section-title">আমার পরীক্ষা / সাবস্ক্রিপশন স্ট্যাটাস</h3>
+    <div class="card" id="examStatusCard">
+        <div style="text-align:center; color:#888; padding:10px;">লোড হচ্ছে...</div>
+    </div>
+
+    <h3 class="section-title">অ্যাকাউন্ট</h3>
+    <div class="card">
+        <p style="font-size:14px; color:#aaa; margin-bottom:14px;">এই ডিভাইস থেকে আপনার অ্যাকাউন্ট লগআউট করুন।</p>
+        <button class="btn-logout" id="btn-logout">🚪 লগআউট করুন</button>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <div class="bottom-nav">
+        <a href="dashboard.html" class="nav-item">
+            <div class="nav-icon">🏠</div>
+            <span>Home</span>
+        </a>
+        <a href="mocktestcomming.html" class="nav-item">
+            <div class="nav-icon">📝</div>
+            <span>Tests</span>
+        </a>
+        <a href="settings.html" class="nav-item active">
+            <div class="nav-icon">⚙️</div>
+            <span>Settings</span>
+        </a>
+        <a href="https://wa.me/916294005916?text=নমস্কার,%20আমার%20একটি%20সমস্যা%20হচ্ছে।" target="_blank" class="nav-item" style="color: #25D366;">
+            <div class="nav-icon">💬</div>
+            <span>WhatsApp</span>
+        </a>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCoBw6-MTBXtIJPEvP9qB7I3JFpJ7MZM5I",
+        authDomain: "mocktest0.firebaseapp.com",
+        projectId: "mocktest0",
+        storageBucket: "mocktest0.firebasestorage.app",
+        messagingSenderId: "251833325363",
+        appId: "1:251833325363:web:8bdd09a4b717bf045e9046",
+        measurementId: "G-6P2P3WS42H"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+            tabManager: persistentMultipleTabManager()
+        })
+    });
+
+    const EXAM_LABELS = {
+        wb_police: { name: "WB Police", icon: "👮" },
+        wbpsc: { name: "WBPSC Exam", icon: "🏛️" },
+        railway: { name: "Railway Exam", icon: "🚂" },
+        tet: { name: "WB TET", icon: "🏫" }
+    };
+
+    let currentUser = null;
+
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+            window.location.href = "login.html";
+            return;
+        }
+        currentUser = user;
+
+        document.getElementById('userEmail').value = user.email || "N/A";
+
+        const userRef = doc(db, "users", user.uid);
+        const snap = await getDoc(userRef);
+
+        if (snap.exists()) {
+            const data = snap.data();
+            document.getElementById('userName').value = data.name || user.displayName || "";
+            document.getElementById('userMobile').value = data.mobile || "N/A";
+            renderExamStatus(data.purchasedExams || {}, data.examExpiry || {});
+        } else {
+            document.getElementById('userName').value = user.displayName || "";
+            renderExamStatus({}, {});
+        }
+    });
+
+    function renderExamStatus(purchased, expiry) {
+        const card = document.getElementById('examStatusCard');
+        let html = "";
+
+        // শুধু যেসব এক্সাম কেনা আছে সেগুলো দেখাবে
+        const activeKeys = Object.keys(purchased).filter(key => purchased[key] === true);
+
+        if (activeKeys.length === 0) {
+            card.innerHTML = `
+                <div style="text-align:center; padding:20px 10px;">
+                    <div style="font-size:36px; margin-bottom:10px;">🔒</div>
+                    <div style="color:#aaa; font-size:14px;">আপনি এখনো কোনো পরীক্ষা কিনননি।</div>
+                    <a href="dashboard.html" style="display:inline-block; margin-top:14px; background:#2ecc71; color:#000; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; font-size:14px;">পরীক্ষা দেখুন</a>
+                </div>`;
+            return;
+        }
+
+        activeKeys.forEach(key => {
+            const info = EXAM_LABELS[key] || { name: key, icon: "📝" };
+            const exp  = expiry[key];
+            let statusHtml = "";
+            let subHtml    = "";
+
+            if (!exp) {
+                statusHtml = `<span class="status-lifetime">♾️ Lifetime</span>`;
+                subHtml    = "কোনো মেয়াদ নেই, সবসময় চালু থাকবে";
+            } else {
+                const expDate  = exp.toDate ? exp.toDate() : new Date(exp.seconds ? exp.seconds * 1000 : exp);
+                const now      = new Date();
+                const daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
+
+                if (daysLeft <= 0) {
+                    statusHtml = `<span class="status-locked">⏰ মেয়াদ শেষ</span>`;
+                    subHtml    = `মেয়াদ শেষ হয়েছে: ${expDate.toLocaleDateString('en-GB')}`;
+                } else if (daysLeft <= 7) {
+                    statusHtml = `<span class="status-expiring">⚠️ আর ${daysLeft} দিন বাকি</span>`;
+                    subHtml    = `মেয়াদ শেষ হবে: ${expDate.toLocaleDateString('en-GB')}`;
+                } else {
+                    statusHtml = `<span class="status-active">✅ সক্রিয় — আর ${daysLeft} দিন বাকি</span>`;
+                    subHtml    = `মেয়াদ শেষ হবে: ${expDate.toLocaleDateString('en-GB')}`;
+                }
+            }
+
+            html += `
+            <div class="exam-row">
+                <div>
+                    <div class="exam-name">${info.icon} ${info.name}</div>
+                    <div class="exam-sub">${subHtml}</div>
+                </div>
+                <div>${statusHtml}</div>
+            </div>`;
+        });
+
+        card.innerHTML = html;
+    }
+
+    document.getElementById('btn-save-name').addEventListener('click', async () => {
+        const newName = document.getElementById('userName').value.trim();
+        if (!newName) {
+            showToast("নাম খালি রাখা যাবে না!");
+            return;
+        }
+        try {
+            await updateDoc(doc(db, "users", currentUser.uid), { name: newName });
+            try { await updateProfile(currentUser, { displayName: newName }); } catch(e) {}
+            localStorage.setItem('user_name', newName);
+            showToast("✅ নাম সফলভাবে আপডেট হয়েছে!");
+        } catch (error) {
+            console.error("Save name error:", error);
+            showToast("❌ আপডেট করতে সমস্যা হয়েছে!");
+        }
+    });
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.innerText = msg;
+        toast.style.display = "block";
+        setTimeout(() => { toast.style.display = "none"; }, 2500);
+    }
+
+    const logoutBtn = document.getElementById('btn-logout');
+    logoutBtn.addEventListener('click', () => {
+        if (confirm("আপনি কি নিশ্চিতভাবে লগআউট করতে চান?")) {
+            localStorage.clear();
+            signOut(auth).then(() => {
+                window.location.href = "login.html";
+            }).catch(error => console.error("Logout Error:", error));
+        }
+    });
+</script>
+</body>
+</html>

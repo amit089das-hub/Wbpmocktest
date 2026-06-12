@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.json">
+    <script src="pwa-install.js"></script>
+    <meta name="theme-color" content="#121212">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Payment Status</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: sans-serif; background-color: #121212; color: white;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0; padding: 20px; text-align: center;
+        }
+        .box {
+            background: #1e1e1e; padding: 35px 25px; border-radius: 14px;
+            max-width: 420px; width: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        .icon { font-size: 56px; margin-bottom: 15px; }
+        h2 { margin: 0 0 12px 0; font-size: 22px; }
+        p { color: #ccc; font-size: 14px; line-height: 1.6; }
+        .btn {
+            display: inline-block; margin-top: 18px; padding: 13px 28px;
+            background: #2ecc71; color: #0a0a0a; border: none; border-radius: 8px;
+            font-weight: bold; text-decoration: none; cursor: pointer; font-size: 15px;
+        }
+        .btn.secondary { background: #2a2a2a; color: #fff; margin-left: 8px; border: 1px solid #444; }
+        .btn.whatsapp  { background: #25D366; color: #fff; display: block; margin-top: 12px; }
+        .spinner {
+            border: 4px solid #2a2a2a; border-top: 4px solid #2ecc71; border-radius: 50%;
+            width: 48px; height: 48px; animation: spin 1s linear infinite; margin: 0 auto 18px auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .order-id { font-size: 11px; color: #555; margin-top: 14px; }
+        .retry-btn {
+            background: none; border: 1px solid #555; color: #aaa;
+            padding: 8px 18px; border-radius: 6px; cursor: pointer;
+            font-size: 13px; margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="box" id="statusBox">
+        <div class="spinner"></div>
+        <h2>পেমেন্ট যাচাই হচ্ছে...</h2>
+        <p>অনুগ্রহ করে অপেক্ষা করুন।<br>পেজ রিফ্রেশ করবেন না।</p>
+    </div>
+
+<script type="module">
+    import { initializeApp }       from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+             doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCoBw6-MTBXtIJPEvP9qB7I3JFpJ7MZM5I",
+        authDomain: "mocktest0.firebaseapp.com",
+        projectId: "mocktest0",
+        storageBucket: "mocktest0.firebasestorage.app",
+        messagingSenderId: "251833325363",
+        appId: "1:251833325363:web:8bdd09a4b717bf045e9046"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = initializeFirestore(app, {
+        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+    });
+
+    const CLOUD_FUNCTIONS_BASE = "https://YOUR_PROJECT.vercel.app/api";
+    const MY_WHATSAPP          = "916294005916";
+
+    const params  = new URLSearchParams(window.location.search);
+    const orderId = params.get('order_id');
+    const box     = document.getElementById('statusBox');
+
+    function showResult(type, title, message, examKey, examName) {
+        const icons = { success: "✅", pending: "⏳", failed: "❌" };
+
+        let btns = "";
+        if (type === "success" && examKey) {
+            btns = `<a href="mocktestcomming.html?exam=${examKey}" class="btn">🚀 টেস্ট শুরু করুন</a>
+                    <a href="dashboard.html" class="btn secondary">Dashboard</a>`;
+        } else if (type === "pending") {
+            btns = `<a href="dashboard.html" class="btn">Dashboard এ যান</a>
+                    <a href="https://wa.me/${MY_WHATSAPP}" target="_blank" class="btn whatsapp">💬 WhatsApp Support</a>
+                    <button class="retry-btn" onclick="location.reload()">🔄 আবার চেক করুন</button>`;
+        } else {
+            btns = `<a href="javascript:history.back()" class="btn secondary">← পেমেন্ট পেজে ফিরুন</a>
+                    <a href="https://wa.me/${MY_WHATSAPP}" target="_blank" class="btn whatsapp">💬 সাপোর্ট</a>`;
+        }
+
+        const orderLine = orderId ? `<div class="order-id">Order ID: ${orderId}</div>` : "";
+
+        box.innerHTML = `
+            <div class="icon">${icons[type] || "❓"}</div>
+            <h2>${title}</h2>
+            <p>${message}</p>
+            ${btns}
+            ${orderLine}
+        `;
+    }
+
+    async function verifyPayment(user) {
+        // ── Case 1: Cashfree redirect (order_id আছে URL-এ) ──
+        if (orderId) {
+            try {
+                const resp = await fetch(
+                    `${CLOUD_FUNCTIONS_BASE}/verifyCashfreeOrder?order_id=${encodeURIComponent(orderId)}`
+                );
+
+                // Vercel function না থাকলে বা error হলে Firestore থেকে সরাসরি চেক করা
+                if (!resp.ok) throw new Error("api_unavailable");
+
+                const result = await resp.json();
+
+                if (result.dbStatus === "SUCCESS" || result.orderStatus === "PAID") {
+                    showResult("success",
+                        "পেমেন্ট সফল! 🎉",
+                        `${result.examName || "আপনার মক টেস্ট"} এখন আনলক হয়েছে।`,
+                        result.examKey, result.examName);
+                } else if (["ACTIVE","PENDING"].includes(result.orderStatus) || result.dbStatus === "PENDING") {
+                    showResult("pending",
+                        "পেমেন্ট প্রসেস হচ্ছে...",
+                        "পেমেন্ট কনফার্ম হতে কিছুটা সময় লাগতে পারে। কিছুক্ষণ পর Dashboard চেক করুন।");
+                } else {
+                    showResult("failed",
+                        "পেমেন্ট ব্যর্থ",
+                        "পেমেন্ট সম্পন্ন হয়নি বা বাতিল হয়েছে। আবার চেষ্টা করুন।");
+                }
+
+            } catch (err) {
+                // API unavailable হলে Firestore থেকে ডিরেক্ট চেক করা (fallback)
+                await checkFirestoreDirectly(user, orderId);
+            }
+
+        } else {
+            // ── Case 2: QR/UPI পেমেন্টের পর manual redirect ──
+            // order_id নেই মানে QR পেমেন্ট করেছে, screenshot পাঠাবে
+            showResult("pending",
+                "স্ক্রিনশট পাঠান",
+                "UPI পেমেন্ট করলে নিচের WhatsApp বাটনে ক্লিক করে <b>স্ক্রিনশট পাঠান</b>। ১০-১৫ মিনিটের মধ্যে অ্যাক্সেস দেওয়া হবে।");
+        }
+    }
+
+    // Firestore থেকে সরাসরি purchase রেকর্ড চেক (API fallback)
+    async function checkFirestoreDirectly(user, oid) {
+        try {
+            const snap = await getDoc(doc(db, "purchases", oid));
+            if (!snap.exists()) {
+                showResult("failed", "অর্ডার পাওয়া যায়নি", "এই Order ID দিয়ে কোনো রেকর্ড নেই।");
+                return;
+            }
+            const data = snap.data();
+            if (data.status === "SUCCESS") {
+                showResult("success", "পেমেন্ট সফল! 🎉",
+                    `${data.examName || "মক টেস্ট"} আনলক হয়েছে।`,
+                    data.examKey, data.examName);
+            } else {
+                showResult("pending", "পেমেন্ট প্রসেস হচ্ছে...",
+                    "কিছুক্ষণ অপেক্ষা করুন এবং Dashboard চেক করুন।");
+            }
+        } catch(e) {
+            showResult("pending", "যাচাই করা যাচ্ছে না",
+                "নেটওয়ার্ক সমস্যা হতে পারে। যদি টাকা কেটে থাকে, WhatsApp-এ যোগাযোগ করুন।");
+        }
+    }
+
+    onAuthStateChanged(auth, (user) => {
+        if (!user) { window.location.href = "login.html"; return; }
+        verifyPayment(user);
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<script src="pwa-install.js"></script>
+<meta name="theme-color" content="#121212">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Purchase History - Admin</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+*{ margin:0; padding:0; box-sizing:border-box; font-family:Arial, sans-serif; }
+body{ background:#f4f4f4; padding:20px; }
+.container{ max-width:1100px; margin:auto; }
+h1{ text-align:center; margin-bottom:20px; color:#333; }
+.top-bar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
+.top-bar a, .top-bar button{ padding:10px 18px; border:none; border-radius:10px; background:#6c5ce7; color:white; cursor:pointer; font-weight:bold; text-decoration:none; font-size:14px; }
+.search-box{ display:flex; gap:10px; margin-bottom:20px; }
+.search-box input{ flex:1; padding:12px; border:1px solid #ccc; border-radius:10px; outline:none; font-size:15px; }
+table{ width:100%; border-collapse:collapse; background:white; border-radius:10px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.08); }
+th, td{ padding:12px 10px; text-align:left; font-size:13px; border-bottom:1px solid #eee; }
+th{ background:#6c5ce7; color:white; }
+tr:hover{ background:#f9f9f9; }
+.status-success{ color:#2ecc71; font-weight:bold; }
+.status-pending{ color:#f39c12; font-weight:bold; }
+.status-failed{ color:#e74c3c; font-weight:bold; }
+.loading, .denied, .empty{ text-align:center; margin-top:80px; font-size:20px; color:#666; }
+.denied{ color:red; font-weight:bold; }
+.table-wrap{ overflow-x:auto; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="loading">Checking Admin Access...</div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCoBw6-MTBXtIJPEvP9qB7I3JFpJ7MZM5I",
+  authDomain: "mocktest0.firebaseapp.com",
+  projectId: "mocktest0",
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const app = document.getElementById("app");
+
+const ADMIN_EMAIL = "amit089das@gmail.com";
+
+auth.onAuthStateChanged(async(user)=>{
+  if(!user){
+    app.innerHTML = `<div class="denied">Please Login First</div>`;
+    return;
+  }
+  if(user.email !== ADMIN_EMAIL){
+    app.innerHTML = `<div class="denied">Access Denied: You are not authorized!</div>`;
+    return;
+  }
+  loadPage();
+});
+
+let allPurchases = [];
+
+function loadPage(){
+  app.innerHTML = `
+  <div class="container">
+    <div class="top-bar">
+      <a href="admin.html">⬅ Back to Admin Panel</a>
+      <h1 style="margin:0;">📋 Purchase History</h1>
+      <button onclick="loadPurchases()">🔄 Refresh</button>
+    </div>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="নাম, ইমেইল বা এক্সাম দিয়ে সার্চ করুন..." oninput="filterPurchases()">
+    </div>
+    <div class="table-wrap">
+      <table id="purchaseTable">
+        <thead>
+          <tr>
+            <th>User Name</th>
+            <th>Email</th>
+            <th>Mobile</th>
+            <th>Exam</th>
+            <th>Amount</th>
+            <th>Duration</th>
+            <th>Status</th>
+            <th>Purchased At</th>
+            <th>Expires At</th>
+          </tr>
+        </thead>
+        <tbody id="purchaseBody"></tbody>
+      </table>
+    </div>
+    <div id="emptyMsg" class="empty" style="display:none;">কোনো পারচেজ পাওয়া যায়নি।</div>
+  </div>
+  `;
+  loadPurchases();
+}
+
+// সব ইউজারের সব পারচেজ হিস্ট্রি লোড করা (users collection এর purchaseHistory ফিল্ড থেকে)
+async function loadPurchases(){
+  const tbody = document.getElementById("purchaseBody");
+  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;">লোড হচ্ছে...</td></tr>`;
+  allPurchases = [];
+
+  try{
+    const usersSnap = await db.collection("users").get();
+
+    usersSnap.forEach(doc=>{
+      const user = doc.data();
+      const history = user.purchaseHistory || [];
+      const expiry = user.examExpiry || {};
+
+      history.forEach(item=>{
+        let expiresAtText = "Lifetime";
+        if(item.expiresAt){
+          expiresAtText = new Date(item.expiresAt).toLocaleString('en-GB');
+        } else if(expiry[item.examKey] && expiry[item.examKey].toDate){
+          expiresAtText = expiry[item.examKey].toDate().toLocaleString('en-GB');
+        }
+
+        allPurchases.push({
+          name: user.name || "N/A",
+          email: user.email || "N/A",
+          mobile: user.mobile || "N/A",
+          examName: item.examName || item.examKey || "N/A",
+          amount: item.amount != null ? ("₹" + item.amount) : "N/A",
+          duration: item.durationDays ? (item.durationDays + " দিন") : "Lifetime",
+          status: item.status || "SUCCESS",
+          purchasedAt: item.purchasedAt ? new Date(item.purchasedAt).toLocaleString('en-GB') : "N/A",
+          purchasedAtRaw: item.purchasedAt ? new Date(item.purchasedAt).getTime() : 0,
+          expiresAt: expiresAtText
+        });
+      });
+    });
+
+    // সর্বশেষ পারচেজ আগে দেখানো হবে
+    allPurchases.sort((a,b)=> b.purchasedAtRaw - a.purchasedAtRaw);
+
+    renderTable(allPurchases);
+  }catch(error){
+    console.error("Load purchases error:", error);
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:red;">ডাটা লোড করতে সমস্যা হয়েছে।</td></tr>`;
+  }
+}
+
+function renderTable(data){
+  const tbody = document.getElementById("purchaseBody");
+  const emptyMsg = document.getElementById("emptyMsg");
+
+  if(data.length === 0){
+    tbody.innerHTML = "";
+    emptyMsg.style.display = "block";
+    return;
+  }
+  emptyMsg.style.display = "none";
+
+  tbody.innerHTML = data.map(p=>{
+    let statusClass = "status-success";
+    if(p.status === "PENDING") statusClass = "status-pending";
+    else if(p.status !== "SUCCESS") statusClass = "status-failed";
+
+    return `<tr>
+      <td>${p.name}</td>
+      <td>${p.email}</td>
+      <td>${p.mobile}</td>
+      <td>${p.examName}</td>
+      <td>${p.amount}</td>
+      <td>${p.duration}</td>
+      <td class="${statusClass}">${p.status}</td>
+      <td>${p.purchasedAt}</td>
+      <td>${p.expiresAt}</td>
+    </tr>`;
+  }).join("");
+}
+
+function filterPurchases(){
+  const q = document.getElementById("searchInput").value.trim().toLowerCase();
+  if(!q){ renderTable(allPurchases); return; }
+
+  const filtered = allPurchases.filter(p=>
+    p.name.toLowerCase().includes(q) ||
+    p.email.toLowerCase().includes(q) ||
+    p.mobile.toLowerCase().includes(q) ||
+    p.examName.toLowerCase().includes(q)
+  );
+  renderTable(filtered);
+}
+</script>
+</body>
+</html>
