@@ -10,6 +10,9 @@
     <title>West Bengal All Exam GK Mock Test</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     
     <style>
         * {
@@ -231,6 +234,20 @@
         .stat-val { font-size: 22px; font-weight: bold; margin-top: 5px; }
         .view-review-btn { background-color: #34a853; color: white; border: none; padding: 14px 20px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: opacity 0.2s ease; }
         .view-review-btn:active { opacity: 0.9; }
+        .result-action-btn {
+    flex: 1 !important;
+    margin: 0 !important;
+    padding: 12px 5px !important;
+    font-size: 14px !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    display: inline-flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    height: 48px !important;
+    border-radius: 8px !important;
+}
+
 
         .analysis-card { background: #282a2d; border: 1px solid #383a3e; border-radius: 12px; padding: 20px; margin-top: 20px; text-align: left; }
         .analysis-title { color: #8ab4f8; font-size: 16px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
@@ -293,6 +310,15 @@
         /* Review Mode Palette Status Colors */
         .grid-num.review-correct { background-color: #34a853 !important; color: white !important; }
         .grid-num.review-wrong { background-color: #ea4335 !important; color: white !important; }
+        
+        #scratchpad-toggle-btn {
+    display: none; /* শুরুতে ইনট্রোডাকশন পেজে বন্ধ থাকবে */
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    /* আপনার অন্যান্য CSS স্টাইল এখানে থাকবে... */
+}
+
     </style>
 </head>
 <body>
@@ -379,11 +405,17 @@
         </div>
 
         <div class="marking-bar">
-            <span id="live-question-timer" class="live-q-timer">⏱️ সময়: ০০:০০</span>
-            <button class="top-mark-btn" id="top-mark-btn" onclick="toggleMarkReview()">
-                🔖 Mark
-            </button>
-        </div>
+    <span id="live-question-timer" class="live-q-timer">⏱️ সময়: ০০:০০</span>
+    <div style="display: flex; gap: 8px;">
+        <button class="top-mark-btn" id="screenshot-btn" onclick="takeQuestionScreenshot()" style="background-color: rgba(138, 180, 248, 0.15); color: #8ab4f8; border: 1px solid rgba(138, 180, 248, 0.3);">
+            📸 Img
+        </button>
+        <button class="top-mark-btn" id="top-mark-btn" onclick="toggleMarkReview()">
+            🔖 Mark
+        </button>
+    </div>
+</div>
+
 
         <div class="content-area" id="swipe-area">
             <div id="review-subject-badge" style="display: none; background-color: rgba(138, 180, 248, 0.15); color: #8ab4f8; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; width: fit-content;">General Knowledge</div>
@@ -436,14 +468,17 @@
                 <div class="stat-val" id="res-wrong" style="color: #f28b82;">0</div>
             </div>
             <div class="stat-card">
-                <div>নেগেティブ নম্বর</div>
+                <div>নেগেটিভ নম্বর</div>
                 <div class="stat-val" id="res-negative" style="color: #ea4335;">0</div>
             </div>
             
-            <div class="stat-card full-width" style="display: flex; gap: 12px; padding: 0; background: transparent; border: none;">
-                <button class="view-review-btn" style="flex: 1; margin: 0; background-color: #34a853;" onclick="showReviewMode()">Answer</button>
-                <button class="view-review-btn" style="flex: 1; margin: 0; background-color: #383a3e;" onclick="resetAndReloadTest()">Test again</button>
-            </div>
+            <div class="stat-card full-width" style="grid-column: span 2; display: flex; justify-content: space-between; gap: 8px; padding: 5px; background: transparent; border: none;">
+    <button class="view-review-btn result-action-btn" style="background-color: #34a853;" onclick="showReviewMode()">Answer</button>
+    <button class="view-review-btn result-action-btn" style="background-color: #0284c7;" onclick="generatePDF()">📥 PDF</button>
+    <button class="view-review-btn result-action-btn" style="background-color: #383a3e;" onclick="resetAndReloadTest()">Test again</button>
+</div>
+
+            
             <span id="res-total-time" style="display: none;"></span>
         </div>
         
@@ -753,10 +788,13 @@
         document.getElementById("quiz-ui").classList.add("active");
         window.history.pushState(null, null, window.location.href);
         pushedHistoryStates++;
-        renderQuestion();
+        renderQuestion();  window.manageScratchpadVisibility('quiz');
         startTimer();
         startQuestionTimeTracker();
+    if (typeof window.manageScratchpadVisibility === 'function') {
+        window.manageScratchpadVisibility('quiz'); // বাটনটি চালু হবে
     }
+}
 
     window.addEventListener('popstate', function (event) {
         if (isNavigatingBack) return;
@@ -1428,9 +1466,16 @@
         document.getElementById("result-bottom-nav").style.display = "flex"; 
         document.getElementById("review-filter-container").style.display = "none"; 
         showAdPopup(); 
+    if (typeof window.manageScratchpadVisibility === 'function') {
+        window.manageScratchpadVisibility('result'); // বাটনটি বন্ধ হবে
     }
+}
 
     function showReviewMode() {
+   window.manageScratchpadVisibility('result');
+   if (typeof window.manageScratchpadVisibility === 'function') {
+        window.manageScratchpadVisibility('review'); // বাটনটি বন্ধ থাকবে
+    }
     document.getElementById("result-ui").classList.remove("active");
     document.getElementById("quiz-ui").classList.add("active");
     
@@ -1551,7 +1596,562 @@
         document.getElementById("custom-ad-popup").style.display = "none";
         isPaused = false; 
     }
+    
+    
+    function generatePDF() {
+    const examTitle = testName || "Mock Test";
+    const totalQ = mockQuestions.length;
+    let correctCount = 0;
+    let wrongCount = 0;
+
+    userSelections.forEach((sel, idx) => {
+        if (sel === null) return;
+        if (sel === mockQuestions[idx].correct) {
+            correctCount++;
+        } else {
+            wrongCount++;
+        }
+    });
+
+    // ১. অফ-স্ক্রিন মেইন কন্টেইনার (এখানে এক্সপ্লিসিটলি সব লেখার কালার কালো (#000000) করে দেওয়া হয়েছে)
+    const element = document.createElement("div");
+    element.style.padding = "20px";
+    element.style.backgroundColor = "#ffffff";
+    element.style.color = "#000000"; 
+    element.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+
+    // ২. হেডার এবং এক্সাম সামারি বক্স (ইনলাইন স্টাইলে কালার লক করা হয়েছে যেন সাদা না হতে পারে)
+    let pdfContent = `
+        <div style="text-align: center; border-bottom: 2px solid #000000; padding-bottom: 5px; margin-bottom: 15px; color: #000000;">
+            <h2 style="margin: 0; font-size: 20px; font-weight: bold; text-transform: uppercase; color: #000000;">WB Mock Test Potarl</h2>
+            <h4 style="margin: 5px 0; color: #333333; font-size: 14px;">${examTitle}</h4>
+        </div>
+        
+        <table style="width: 100%; border: 1px solid #000000; margin-bottom: 20px; font-size: 13px; border-collapse: collapse; color: #000000; background-color: #f9fafb;">
+            <tr style="color: #000000;">
+                <td style="padding: 8px; border: 1px solid #000000; font-weight: bold; color: #000000;">Total Questions:</td>
+                <td style="padding: 8px; border: 1px solid #000000; font-weight: bold; color: #1e3a8a;">${totalQ}</td>
+                <td style="padding: 8px; border: 1px solid #000000; font-weight: bold; color: #000000;">Correct Answers:</td>
+                <td style="padding: 8px; border: 1px solid #000000; font-weight: bold; color: #16a34a;">${correctCount}</td>
+            </tr>
+            <tr style="color: #000000;">
+                <td style="padding: 8px; border: 1px solid #000000; font-weight: bold; color: #000000;">Wrong Answers:</td>
+                <td style="padding: 8px; border: 1px solid #000000; font-weight: bold; color: #dc2626;">${wrongCount}</td>
+                <td style="padding: 8px; border: 1px solid #000000; font-weight: bold; color: #000000;">Score:</td>
+                <td style="padding: 8px; border: 1px solid #000000; font-weight: bold; color: #2563eb;">${document.getElementById("res-score").innerText}</td>
+            </tr>
+        </table>
+    `;
+
+    // ৩. প্রতিটি প্রশ্নের লুপ (ডাইনামিক ভাষা, ছবি এবং ফিক্সড ব্ল্যাক টেক্সট কালার)
+    mockQuestions.forEach((q, idx) => {
+        let qText = q.question;
+        if (typeof q.question === 'object') {
+            qText = q.question[currentSelectedLanguage] || q.question['bn'] || Object.values(q.question)[0];
+        }
+
+        let displayOptions = q.options;
+        if (!Array.isArray(q.options) && typeof q.options === 'object') {
+            displayOptions = q.options[currentSelectedLanguage] || q.options['bn'] || Object.values(q.options)[0];
+        }
+
+        // ছবির সেটআপ
+        let imgHTML = "";
+        if (q.image) {
+            imgHTML = `<div style="margin: 8px 0; text-align: left;">
+                <img src="${q.image}" style="max-width: 180px; max-height: 120px; border: 1px solid #cbd5e1; padding: 2px; border-radius: 4px; object-fit: contain;" />
+            </div>`;
+        }
+
+        const userSel = userSelections[idx];
+        let rightSideBox = "";
+        
+        if (userSel === null) {
+            rightSideBox = `
+                <div style="width: 130px; font-size: 11px; text-align: right; color: #475569; font-weight: bold; line-height: 1.4;">
+                    Status: Unanswered<br><span style="color: #000000;">Correct Opt: ${String.fromCharCode(65 + q.correct)}</span>
+                </div>`;
+        } else {
+            const statusText = (userSel === q.correct) ? "Correct" : "Wrong";
+            const statusColor = (userSel === q.correct) ? "#16a34a" : "#dc2626";
+            rightSideBox = `
+                <div style="width: 130px; font-size: 11px; text-align: right; color: ${statusColor}; font-weight: bold; line-height: 1.4;">
+                    Status: ${statusText}<br><span style="color: #000000;">Chosen Opt: ${String.fromCharCode(65 + userSel)}</span><br><span style="color: #000000;">Correct Opt: ${String.fromCharCode(65 + q.correct)}</span>
+                </div>`;
+        }
+
+        let optionsHTML = "";
+        const optionPrefix = ["A", "B", "C", "D"];
+        
+        if (Array.isArray(displayOptions)) {
+            for (let i = 0; i < displayOptions.length; i++) {
+                const isCorrect = (i === q.correct);
+                const isChosen = (i === userSel);
+
+                let optStyle = "margin: 5px 0; display: flex; align-items: flex-start; font-size: 13px; color: #000000;";
+                let icon = `<span style="color: #94a3b8; margin-right: 6px; font-weight: bold;">⚪</span>`;
+
+                if (isCorrect) {
+                    optStyle += " color: #15803d; font-weight: bold;";
+                    icon = `<span style="color: #16a34a; margin-right: 6px; font-weight: bold;">✔️</span>`;
+                } else if (isChosen && !isCorrect) {
+                    optStyle += " color: #dc2626;";
+                    icon = `<span style="color: #dc2626; margin-right: 6px; font-weight: bold;">❌</span>`;
+                }
+
+                optionsHTML += `
+                    <div style="${optStyle}">
+                        <div style="flex-shrink: 0; margin-right: 4px;">${icon} ${optionPrefix[i]}.</div>
+                        <div style="margin-left: 2px;">${displayOptions[i]}</div>
+                    </div>
+                `;
+            }
+        }
+
+        pdfContent += `
+            <div style="display: flex; justify-content: space-between; border: 1px solid #000000; padding: 12px; margin-bottom: 15px; page-break-inside: avoid; background-color: #ffffff; color: #000000;">
+                <div style="flex-grow: 1; padding-right: 15px;">
+                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 6px; color: #000000;">
+                        Q.${idx + 1} ${qText}
+                    </div>
+                    ${imgHTML} 
+                    <div style="padding-left: 5px;">
+                        ${optionsHTML}
+                    </div>
+                </div>
+                ${rightSideBox}
+            </div>
+        `;
+    });
+
+    element.innerHTML = pdfContent;
+
+    // ৪. PDF জেনারেশন অপশনস
+    const opt = {
+        margin:       [12, 12, 12, 12],
+        filename:     `${examTitle.replace(/\s+/g, '_')}_Response_Sheet.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save();
+}
+
+// screenshort এই খানের থেকে শুরু
+
+ function takeQuestionScreenshot() {
+    // প্রশ্ন, ইমেজ এবং অপশন সহ মূল স্ক্রোলিং এরিয়াটি সিলেক্ট করা
+    const element = document.getElementById('swipe-area'); 
+    const btn = document.getElementById('screenshot-btn');
+    if (!btn) return;
+    
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "⏳ Saving...";
+    btn.disabled = true;
+
+    // ১. মকটেস্টের নাম, সাবজেক্টের নাম এবং প্রশ্ন নম্বর ডাইনামিকালি খুঁজে বের করা
+    // ক) Mocktest এর নাম (টাইটেল) সংগ্রহ
+    let examTitle = "MockTest";
+    const titleEl = document.getElementById("inst-test-name");
+    if (titleEl && titleEl.innerText.trim()) {
+        examTitle = titleEl.innerText.trim().replace(/\s+/g, '_'); // স্পেসগুলো (_) দিয়ে পরিবর্তন করা হলো
+    }
+
+    // খ) সাবজেক্ট এর নাম সংগ্রহ
+    let subjectName = "GK";
+    const subjectEl = document.getElementById("review-subject-badge");
+    if (subjectEl && subjectEl.innerText.trim()) {
+        subjectName = subjectEl.innerText.trim().replace(/\s+/g, '_');
+    }
+
+    // গ) প্রশ্নের নম্বর (Mocktest বা Question Number) সংগ্রহ 
+    // (currentIndex ০ থেকে শুরু হয় বলে বাস্তব নম্বর দেখাতে ১ যোগ করা হয়েছে)
+    let qNumber = "Q_" + (currentIndex + 1);
+
+    // ঘ) আপনার রিকোয়েস্ট অনুযায়ী সম্পূর্ণ ডাইনামিক ফাইলের নাম তৈরি 
+    // (যেমন: WB_Police_GK_Mock_Test_History_Q_5.png)
+    const filename = `${examTitle}_${subjectName}_${qNumber}.png`;
+
+    // ২. ছবির ভেতরের ইমেজগুলো পুরোপুরি লোড হওয়া নিশ্চিত করা
+    const images = element.getElementsByTagName('img');
+    const imagePromises = [];
+    for (let img of images) {
+        if (!img.complete) {
+            imagePromises.push(new Promise(resolve => {
+                img.onload = img.onerror = resolve;
+            }));
+        }
+    }
+
+    Promise.all(imagePromises).then(() => {
+        // ৩. স্ক্রিনশট নেওয়ার ঠিক আগের মুহূর্তে ব্যাকগ্রাউন্ডে এরিয়াটির স্ক্রোলিং ও হাইট ফিক্স করা
+        // যাতে ব্রাউজার পুরো ভেতরের অংশটি দেখতে পায় এবং ছবি না কাটে
+        const originalHeight = element.style.height;
+        const originalOverflow = element.style.overflowY;
+        
+        element.style.height = 'auto';
+        element.style.overflowY = 'visible';
+
+        html2canvas(element, {
+            backgroundColor: "#1f2124", // আপনার অ্যাপের অরিজিনাল ডার্ক ব্যাকগ্রাউন্ড কালার
+            scale: 2.5, // জুম করলেও যেন লেখা বা ছবি ফেটে না যায় (Super HD)
+            logging: false,
+            useCORS: true,
+            allowTaint: true,
+            // অতিরিক্ত মার্জিন বা প্যাডিংয়ের কারণে কেটে যাওয়া রোধ করতে
+            width: element.offsetWidth,
+            height: element.scrollHeight,
+            windowWidth: element.offsetWidth,
+            windowHeight: element.scrollHeight,
+            x: 0,
+            y: 0,
+            scrollX: 0,
+            scrollY: 0
+        }).then(canvas => {
+            // ৪. স্ক্রিনশট নেওয়া শেষে এলিমেন্টের স্টাইল আগের মতো করে দেওয়া
+            element.style.height = originalHeight;
+            element.style.overflowY = originalOverflow;
+
+            canvas.toBlob(function(blob) {
+                if (!blob) {
+                    alert("স্ক্রিনশট তৈরি করা যায়নি!");
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+                
+                const blobUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                
+                link.href = blobUrl;
+                link.download = filename; // ডাইনামিক ফাইলের নাম এখানে সেট হলো
+                document.body.appendChild(link);
+                link.click();
+                
+                document.body.removeChild(link);
+                URL.revokeObjectURL(blobUrl);
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 'image/png');
+
+        }).catch(err => {
+            console.error("Screenshot error:", err);
+            // ভুল হলেও যেন স্টাইল আগের মতো ফিরে আসে
+            element.style.height = originalHeight;
+            element.style.overflowY = originalOverflow;
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            alert("স্ক্রিনশট নেওয়া সম্ভব হয়নি!");
+        });
+    });
+}
+
+// এই খানে আঙুল দিয়ে লেখার বাটন এর জাভাস্ক্রিপ্ট কোড দেওয়া
+
+// ==========================================
+// স্ক্র্যাচপ্যাড ক্যানভাস ড্রয়িং ও ড্র্যাগ লজিক
+// ==========================================
+let drawing = false;
+let isDragging = false;
+let dragStartX, dragStartY;
+let btnStartX, btnStartY;
+let hasMoved = false;
+
+function initScratchpad() {
+    // আপনার উল্লেখ করা লাইনগুলো এখানে সঠিকভাবে দেওয়া আছে
+    const toggleBtn = document.getElementById('scratchpad-toggle-btn');
+    const container = document.getElementById('scratchpad-container');
+    const canvas = document.getElementById('scratchpad-canvas');
+    const clearBtn = document.getElementById('scratchpad-clear');
+    const closeBtn = document.getElementById('scratchpad-close');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        ctx.strokeStyle = '#00ffcc'; 
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+    }
+
+    function startDrag(e) {
+        isDragging = true;
+        hasMoved = false;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        dragStartX = clientX;
+        dragStartY = clientY;
+        const rect = toggleBtn.getBoundingClientRect();
+        btnStartX = rect.left;
+        btnStartY = rect.top;
+    }
+
+    function doDrag(e) {
+        if (!isDragging) return;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const diffX = clientX - dragStartX;
+        const diffY = clientY - dragStartY;
+
+        if (Math.abs(diffX) > 5 || Math.abs(diffY) > 5) {
+            hasMoved = true;
+        }
+
+        let newLeft = btnStartX + diffX;
+        let newTop = btnStartY + diffY;
+        newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - 50));
+        newTop = Math.max(0, Math.min(newTop, window.innerHeight - 50));
+
+        toggleBtn.style.left = newLeft + 'px';
+        toggleBtn.style.top = newTop + 'px';
+        toggleBtn.style.bottom = 'auto';
+        toggleBtn.style.right = 'auto';
+    }
+
+    function stopDrag() { isDragging = false; }
+
+    toggleBtn.addEventListener('click', () => {
+        if (hasMoved) return; 
+        if (container.style.display === 'none') {
+            container.style.display = 'block';
+            resizeCanvas();
+            toggleBtn.style.background = '#e74c3c';
+            toggleBtn.innerHTML = '❌';
+        } else {
+            closeScratchpad();
+        }
+    });
+
+    function closeScratchpad() {
+        container.style.display = 'none';
+        toggleBtn.style.background = '#ff9800';
+        toggleBtn.innerHTML = '📝';
+    }
+
+    closeBtn.addEventListener('click', closeScratchpad);
+    clearBtn.addEventListener('click', () => { ctx.clearRect(0, 0, canvas.width, canvas.height); });
+
+    function startDrawing(e) { drawing = true; draw(e); }
+    function stopDrawing() { drawing = false; ctx.beginPath(); }
+    function draw(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        ctx.lineTo(clientX, clientY);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(clientX, clientY);
+    }
+
+    toggleBtn.addEventListener('touchstart', startDrag, { passive: true });
+    toggleBtn.addEventListener('touchmove', doDrag, { passive: true });
+    toggleBtn.addEventListener('touchend', stopDrag);
+    toggleBtn.addEventListener('mousedown', startDrag);
+    window.addEventListener('mousemove', doDrag);
+    window.addEventListener('mouseup', stopDrag);
+
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', stopDrawing);
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    window.addEventListener('resize', resizeCanvas);
+}
+
+// ভিজিবিলিটি কন্ট্রোল ফাংশন
+window.manageScratchpadVisibility = function(screenName) {
+    const toggleBtn = document.getElementById('scratchpad-toggle-btn');
+    const container = document.getElementById('scratchpad-container');
+    if(!toggleBtn) return;
+    
+    if (screenName === 'quiz') {
+        toggleBtn.style.display = 'flex';
+    } else {
+        toggleBtn.style.display = 'none';
+        if(container) {
+            container.style.display = 'none';
+            toggleBtn.style.background = '#ff9800';
+            toggleBtn.innerHTML = '📝';
+        }
+    }
+};
+
+// পেজ লোড হলে পুরো সিস্টেম চালু করা
+document.addEventListener("DOMContentLoaded", initScratchpad);
+
+
 </script>
+
+
+<!-- ✅ সংশোধন করা সঠিক কোড -->
+<button id="scratchpad-toggle-btn" style="display: none; position: fixed; bottom: 120px; right: 20px; z-index: 10005; background: #ff9800; color: white; border: none; padding: 12px; border-radius: 50%; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: move; width: 50px; height: 50px; align-items: center; justify-content: center; touch-action: none;">
+    📝
+</button>
+
+<div id="scratchpad-container" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10001; background: rgba(0, 0, 0, 0.2); pointer-events: auto;">
+    <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 10px; z-index: 10003; pointer-events: auto;">
+        <button id="scratchpad-clear" style="background: #e74c3c; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); font-size: 14px;">Clear</button>
+        <button id="scratchpad-close" style="background: #34495e; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); font-size: 14px;">Close</button>
+    </div>
+    <canvas id="scratchpad-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10002;"></canvas>
+</div>
+
+<script>
+// ==========================================
+// স্ক্র্যাচপ্যাড ক্যানভাস ড্রয়িং ও ড্র্যাগ লজিক
+// ==========================================
+let drawing = false;
+let isDragging = false;
+let dragStartX, dragStartY;
+let btnStartX, btnStartY;
+let hasMoved = false;
+
+function initScratchpad() {
+    const toggleBtn = document.getElementById('scratchpad-toggle-btn');
+    const container = document.getElementById('scratchpad-container');
+    const canvas = document.getElementById('scratchpad-canvas');
+    const clearBtn = document.getElementById('scratchpad-clear');
+    const closeBtn = document.getElementById('scratchpad-close');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        ctx.strokeStyle = '#00ffcc';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+    }
+
+    function startDrag(e) {
+        isDragging = true;
+        hasMoved = false;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        dragStartX = clientX;
+        dragStartY = clientY;
+        const rect = toggleBtn.getBoundingClientRect();
+        btnStartX = rect.left;
+        btnStartY = rect.top;
+    }
+
+    function doDrag(e) {
+        if (!isDragging) return;
+        hasMoved = true;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const dx = clientX - dragStartX;
+        const dy = clientY - dragStartY;
+        toggleBtn.style.left = (btnStartX + dx) + 'px';
+        toggleBtn.style.top = (btnStartY + dy) + 'px';
+        toggleBtn.style.right = 'auto';
+        toggleBtn.style.bottom = 'auto';
+    }
+
+    function stopDrag() {
+        isDragging = false;
+    }
+
+    // অঙ্কন শুরু (দাগ টানা)
+    function startDrawing(e) {
+        // যদি বাটনে ক্লিক করা হয় তবে অঙ্কন বন্ধ থাকবে
+        if (e.target === clearBtn || e.target === closeBtn) return;
+        
+        drawing = true;
+        ctx.beginPath();
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        ctx.moveTo(clientX - rect.left, clientY - rect.top);
+        if(e.touches) e.preventDefault();
+    }
+
+    function draw(e) {
+        if (!drawing) return;
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        ctx.lineTo(clientX - rect.left, clientY - rect.top);
+        ctx.stroke();
+        if(e.touches) e.preventDefault();
+    }
+
+    function stopDrawing() {
+        drawing = false;
+    }
+
+    // বাটন ইভেন্ট হ্যান্ডলার
+    clearBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // ক্লিকটি যেন ক্যানভাসে পাস না হয়
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        container.style.display = 'none';
+        toggleBtn.style.background = '#ff9800';
+        toggleBtn.innerHTML = '📝';
+    });
+
+    toggleBtn.addEventListener('click', () => {
+        if (hasMoved) return; // ড্র্যাগ করলে ড্রয়িং মোড অন হবে না
+        if (container.style.display === 'none' || container.style.display === '') {
+            container.style.display = 'block';
+            resizeCanvas();
+            toggleBtn.style.background = '#e74c3c';
+            toggleBtn.innerHTML = '✕';
+        } else {
+            container.style.display = 'none';
+            toggleBtn.style.background = '#ff9800';
+            toggleBtn.innerHTML = '📝';
+        }
+    });
+
+    // টাচ ও মাউস লিসেনার যুক্ত করা
+    toggleBtn.addEventListener('touchstart', startDrag);
+    window.addEventListener('touchmove', doDrag, { passive: false });
+    window.addEventListener('touchend', stopDrag);
+    toggleBtn.addEventListener('mousedown', startDrag);
+    window.addEventListener('mousemove', doDrag);
+    window.addEventListener('mouseup', stopDrag);
+
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', stopDrawing);
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    
+    window.addEventListener('resize', resizeCanvas);
+}
+
+// ভিজিবিলিটি কন্ট্রোল ফাংশন
+window.manageScratchpadVisibility = function(screenName) {
+    const toggleBtn = document.getElementById('scratchpad-toggle-btn');
+    const container = document.getElementById('scratchpad-container');
+    if(!toggleBtn) return;
+    
+    if (screenName === 'quiz') {
+        toggleBtn.style.display = 'flex';
+    } else {
+        toggleBtn.style.display = 'none';
+        if(container) container.style.display = 'none';
+        if(toggleBtn) {
+            toggleBtn.style.background = '#ff9800';
+            toggleBtn.innerHTML = '📝';
+        }
+    }
+};
+
+// পেজ লোড হলে পুরো সিস্টেম চালু করা
+document.addEventListener("DOMContentLoaded", initScratchpad);
+</script>
+
 
 </body>
 </html>
