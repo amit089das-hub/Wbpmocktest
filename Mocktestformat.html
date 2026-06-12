@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="manifest.json">
+    <script src="pwa-install.js"></script>
     <meta name="theme-color" content="#121212">
     <meta name="mobile-web-app-capable" content="yes">
     <title>West Bengal All Exam GK Mock Test</title>
@@ -19,26 +20,34 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        body {
+        html, body {
             background-color: #1f2124;
             color: #ffffff;
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            min-height: 100vh;
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
         }
 
         .main-wrapper {
             width: 100%;
             max-width: 500px;
             background-color: #282a2d;
-            min-height: 100vh;
+            height: 100%;
+            max-height: 100vh;
             display: flex;
             flex-direction: column;
             position: relative;
+            overflow: hidden;
         }
 
         /* --- INSTRUCTION SCREEN STYLES --- */
+        #quiz-ui { display: none; flex-direction: column; height: 100%; min-height: 0; }
+        #quiz-ui.active { display: flex; }
+
         #instruction-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #1f2124; z-index: 10000;
@@ -64,6 +73,7 @@
     align-items: center;
     border-bottom: 1px solid #383a3e;
     gap: 12px; /* উপাদানগুলোর মাঝের দূরত্ব কিছুটা বাড়ানো হলো */
+    flex-shrink: 0;
 }
 
 .timer-section { 
@@ -169,7 +179,7 @@
         .submit-btn:active { background-color: #d93025; }
 
         /* Number Bar Layout */
-        .number-bar-container { display: flex; align-items: center; background-color: #1f2124; border-bottom: 1px solid #383a3e; }
+        .number-bar-container { display: flex; align-items: center; background-color: #1f2124; border-bottom: 1px solid #383a3e; flex-shrink: 0; }
         .number-bar { display: flex; gap: 12px; padding: 15px; overflow-x: auto; flex-grow: 1; }
         .number-bar::-webkit-scrollbar { display: none; }
         .grid-view-btn { background: none; border: none; padding: 10px 15px; color: #8ab4f8; font-size: 24px; cursor: pointer; border-left: 1px solid #383a3e; display: flex; align-items: center; justify-content: center; }
@@ -184,12 +194,12 @@
         .num-bubble.review-wrong { background-color: #ea4335 !important; color: white !important; }
 
         /* Marking Bar */
-        .marking-bar { display: flex; justify-content: space-between; padding: 10px 15px; background-color: #24272a; font-size: 14px; align-items: center; border-bottom: 1px solid #323538; }
+        .marking-bar { display: flex; justify-content: space-between; padding: 10px 15px; background-color: #24272a; font-size: 14px; align-items: center; border-bottom: 1px solid #323538; flex-shrink: 0; }
         .live-q-timer { color: #fdd663; font-weight: bold; }
         .top-mark-btn { background-color: rgba(251, 188, 4, 0.15); color: #fbbc04; border: 1px solid rgba(251, 188, 4, 0.3); padding: 5px 12px; border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.2s ease; }
 
         /* Question Area */
-        .content-area { padding: 20px 15px; flex-grow: 1; margin-bottom: 80px; touch-action: pan-y; user-select: none; transition: opacity 0.3s ease; }
+        .content-area { padding: 20px 15px; flex-grow: 1; margin-bottom: 0; touch-action: pan-y; user-select: none; transition: opacity 0.3s ease; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; }
         .question-text { font-size: 18px; line-height: 1.5; margin-bottom: 25px; color: #e8eaed; }
         .question-image-container { margin: 12px 0 20px 0; text-align: center; }
         .question-image { max-width: 100%; max-height: 300px; border-radius: 10px; border: 2px solid #3c4043; object-fit: contain; background: #fff; padding: 4px; }
@@ -203,7 +213,7 @@
         .option-card.wrong-ans { border-color: #ea4335 !important; background-color: rgba(234, 67, 53, 0.15) !important; }
 
         /* Fixed Bottom Button */
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 500px; padding: 15px; background-color: #282a2d; border-top: 1px solid #383a3e; display: flex; gap: 10px; z-index: 10; }
+        .bottom-nav { width: 100%; padding: 15px; background-color: #282a2d; border-top: 1px solid #383a3e; display: flex; gap: 10px; z-index: 10; flex-shrink: 0; }
         .nav-btn { flex: 1.2; background-color: #3b82f6; color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; }
         .nav-btn:active { background-color: #2563eb; }
         .nav-btn.secondary { flex: 1; background-color: #383a3e; color: #e8eaed; }
@@ -211,7 +221,8 @@
         .nav-btn.clear-action:active { background-color: rgba(234, 67, 53, 0.1); }
 
         /* Result Screen */
-        .result-screen { display: none; padding: 30px 20px; text-align: center; padding-bottom: 90px; }
+        .result-screen { display: none; flex-direction: column; height: 100%; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 30px 20px; text-align: center; padding-bottom: 90px; }
+        .result-screen.active { display: flex; }
         .result-title { font-size: 24px; color: #8ab4f8; margin-bottom: 20px; }
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
@@ -322,7 +333,7 @@
         </div>
     </div>
 
-    <div id="quiz-ui" style="display: none;">
+    <div id="quiz-ui">
         <div class="top-header" style="display: flex !important; justify-content: space-between !important; align-items: center !important; background-color: #1f2124; padding: 12px 10px; border-bottom: 1px solid #383a3e; gap: 12px; width: 100%;">
 
             <div class="timer-section" id="top-timer-section" style="display: flex !important; align-items: center !important; flex-shrink: 0 !important; order: 1;">
@@ -563,6 +574,7 @@
     const examStorageKey = "mock_test_time_" + (scriptPath || "default_test");
     const pauseStorageKey = examStorageKey + "_paused";
     const referrerStorageKey = examStorageKey + "_referrer";
+    const progressStorageKey = examStorageKey + "_progress";
 
     const testName = urlParams.get('testName') || 'Mock Test';
     const parsedTotalQ = parseInt(urlParams.get('q')) || 0;
@@ -674,7 +686,29 @@
                 if (savedTimeLeft !== null) {
                     totalTime = parseInt(savedTimeLeft);
                 }
-                shuffleQuestions();
+
+                let restoredFromSave = false;
+                const savedProgressStr = localStorage.getItem(progressStorageKey);
+                if (savedProgressStr) {
+                    try {
+                        const saved = JSON.parse(savedProgressStr);
+                        if (saved && Array.isArray(saved.mockQuestions) && saved.mockQuestions.length > 0) {
+                            mockQuestions = saved.mockQuestions;
+                            userSelections = saved.userSelections || new Array(mockQuestions.length).fill(null);
+                            bookmarkedQuestions = saved.bookmarkedQuestions || {};
+                            questionSpentTimes = saved.questionSpentTimes || new Array(mockQuestions.length).fill(0);
+                            currentIndex = (typeof saved.currentIndex === 'number' && saved.currentIndex >= 0 && saved.currentIndex < mockQuestions.length) ? saved.currentIndex : 0;
+                            filteredIndices = mockQuestions.map((_, idx) => idx);
+                            restoredFromSave = true;
+                        }
+                    } catch (e) {
+                        console.log("Progress restore failed:", e);
+                    }
+                }
+
+                if (!restoredFromSave) {
+                    shuffleQuestions();
+                }
                 
                 // --- পপআপের সিলেক্ট করা ডিফল্ট ভাষা যাতে শুরুতেই মেইন স্ক্রিনে সেট হয় ---
                 const instDropdown = document.getElementById("inst-lang-selector");
@@ -689,12 +723,13 @@
                 if (localStorage.getItem(pauseStorageKey) === 'true') {
                     isPaused = true;
                     document.getElementById("instruction-screen").style.display = "none";
-                    document.getElementById("quiz-ui").style.display = "block";
+                    document.getElementById("quiz-ui").classList.add("active");
                     window.history.pushState(null, null, window.location.href);
+                    pushedHistoryStates++;
                     openPauseConfirmModal();
                 } else {
                     document.getElementById("instruction-screen").style.display = "flex";
-                    document.getElementById("quiz-ui").style.display = "none";
+                    document.getElementById("quiz-ui").classList.remove("active");
                 }
                 
                 // ভাষা সঠিকভাবে অ্যাসাইন হওয়ার পর ফাইনাল রেন্ডার হবে
@@ -710,18 +745,24 @@
     }
 
 
+    let pushedHistoryStates = 0;
+    let isNavigatingBack = false;
+
     function startTestFromInstruction() {
         document.getElementById("instruction-screen").style.display = "none";
-        document.getElementById("quiz-ui").style.display = "block";
+        document.getElementById("quiz-ui").classList.add("active");
         window.history.pushState(null, null, window.location.href);
+        pushedHistoryStates++;
         renderQuestion();
         startTimer();
         startQuestionTimeTracker();
     }
 
     window.addEventListener('popstate', function (event) {
-        if (!isSubmitted && document.getElementById("quiz-ui").style.display === "block") {
+        if (isNavigatingBack) return;
+        if (!isSubmitted && document.getElementById("quiz-ui").classList.contains("active")) {
             window.history.pushState(null, null, window.location.href);
+            pushedHistoryStates++;
             openPauseConfirmModal();
         }
     });
@@ -737,13 +778,25 @@
             const savedReferrer = localStorage.getItem(referrerStorageKey);
             const examKey = urlParams.get('exam') || '';
             isSubmitted = true; 
-            
+
+            let targetUrl;
             if (savedReferrer && savedReferrer.includes('mocktestcomming.html')) {
-                window.location.href = savedReferrer;
+                targetUrl = savedReferrer;
             } else if (examKey) {
-                window.location.href = `mocktestcomming.html?exam=${examKey}`;
+                targetUrl = `mocktestcomming.html?exam=${examKey}`;
             } else {
-                window.location.href = 'mocktestcomming.html';
+                targetUrl = 'mocktestcomming.html';
+            }
+
+            if (pushedHistoryStates > 0) {
+                isNavigatingBack = true;
+                window.addEventListener('popstate', function onceBack() {
+                    window.removeEventListener('popstate', onceBack);
+                    window.location.replace(targetUrl);
+                }, { once: true });
+                window.history.go(-pushedHistoryStates);
+            } else {
+                window.location.replace(targetUrl);
             }
         }
     }
@@ -765,6 +818,26 @@
     let reviewFilterSubject = "All";
     let reviewFilterPerformance = "All"; 
     let filteredIndices = [];
+
+    function saveProgress() {
+        if (isSubmitted) return;
+        try {
+            const progressData = {
+                mockQuestions: mockQuestions,
+                userSelections: userSelections,
+                bookmarkedQuestions: bookmarkedQuestions,
+                questionSpentTimes: questionSpentTimes,
+                currentIndex: currentIndex
+            };
+            localStorage.setItem(progressStorageKey, JSON.stringify(progressData));
+        } catch (e) {
+            console.log("Progress save failed:", e);
+        }
+    }
+
+    function clearProgress() {
+        localStorage.removeItem(progressStorageKey);
+    }
 
     function shuffleQuestions() {
         let shuffled = [...rawQuestions];
@@ -829,6 +902,7 @@
         } else {
             totalTime--;
             localStorage.setItem(examStorageKey, totalTime);
+            saveProgress();
             
             let min = Math.floor(totalTime / 60).toString().padStart(2, '0');
             let sec = (totalTime % 60).toString().padStart(2, '0');
@@ -895,6 +969,7 @@
         if (isSubmitted) return;
         isPaused = true;
         localStorage.setItem(pauseStorageKey, "true"); 
+        saveProgress();
 
         let attemptedCount = userSelections.filter(ans => ans !== null).length;
         let skippedCount = mockQuestions.length - attemptedCount;
@@ -947,7 +1022,7 @@
 
             btn.id = `bubble-${idx}`;
             btn.innerText = idx + 1;
-            btn.onclick = () => { currentIndex = idx; renderQuestion(); startQuestionTimeTracker(); };
+            btn.onclick = () => { currentIndex = idx; renderQuestion(); startQuestionTimeTracker(); if (!isSubmitted) saveProgress(); };
             bar.appendChild(btn);
         });
 
@@ -990,6 +1065,7 @@
                 renderQuestion();
                 startQuestionTimeTracker();
                 closeGridDrawer();
+                if (!isSubmitted) saveProgress();
             };
             gridLayout.appendChild(numBox);
         });
@@ -1018,6 +1094,7 @@
             bookmarkedQuestions[currentIndex] = true;
         }
         renderQuestion();
+        saveProgress();
     }
 
     function renderQuestion() {
@@ -1130,6 +1207,7 @@
         if (isSubmitted) return;
         userSelections[currentIndex] = null;
         renderQuestion();
+        saveProgress();
     }
 
     function selectOption(optionIndex) {
@@ -1142,6 +1220,7 @@
         }
         
         renderQuestion();
+        saveProgress();
     }
 
     function changeQuestion(step) {
@@ -1168,6 +1247,7 @@
         
         renderQuestion();
         startQuestionTimeTracker(); 
+        if (!isSubmitted) saveProgress();
     }
 
     let touchStartX = 0; let touchEndX = 0;
@@ -1221,6 +1301,7 @@
         localStorage.removeItem(examStorageKey);
         localStorage.removeItem(pauseStorageKey); 
         localStorage.removeItem(referrerStorageKey); 
+        clearProgress();
         
         isSubmitted = true;
         isPaused = false;
@@ -1342,16 +1423,16 @@
     }
 
     function showResultScreen() {
-        document.getElementById("quiz-ui").style.display = "none";
-        document.getElementById("result-ui").style.display = "block";
+        document.getElementById("quiz-ui").classList.remove("active");
+        document.getElementById("result-ui").classList.add("active");
         document.getElementById("result-bottom-nav").style.display = "flex"; 
         document.getElementById("review-filter-container").style.display = "none"; 
         showAdPopup(); 
     }
 
     function showReviewMode() {
-    document.getElementById("result-ui").style.display = "none";
-    document.getElementById("quiz-ui").style.display = "block";
+    document.getElementById("result-ui").classList.remove("active");
+    document.getElementById("quiz-ui").classList.add("active");
     
     document.getElementById("top-timer-section").style.display = "none"; 
     document.getElementById("top-submit-btn").style.display = "none"; 
@@ -1457,6 +1538,7 @@
         localStorage.removeItem(examStorageKey);
         localStorage.removeItem(pauseStorageKey);
         localStorage.removeItem(referrerStorageKey);
+        clearProgress();
         window.location.reload();
     }
 
