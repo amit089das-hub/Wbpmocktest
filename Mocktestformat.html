@@ -1790,10 +1790,10 @@ function takeQuestionScreenshot() {
 
         html2canvas(element, {
             backgroundColor: "#1f2124", 
-            scale: 2.5, 
+            scale: 2.0, // মেমোরি ওভারফ্লো এড়াতে এবং স্পিড বাড়াতে scale ২.০ করা হলো (এটিও Super HD)
             logging: false,
             useCORS: true,
-            allowTaint: false, // ERR_FILE_NOT_FOUND এরর এড়াতে এটি false রাখাই নিরাপদ
+            allowTaint: false, // এক্সটার্নাল ইমেজের সিকিউরিটি ফিক্স
             width: element.offsetWidth,
             height: element.scrollHeight,
             windowWidth: element.offsetWidth,
@@ -1807,29 +1807,28 @@ function takeQuestionScreenshot() {
             element.style.height = originalHeight;
             element.style.overflowY = originalOverflow;
 
-            canvas.toBlob(function(blob) {
-                if (!blob) {
-                    alert("স্ক্রিনশট তৈরি করা যায়নি!");
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    return;
-                }
-                
-                // Blob URL তৈরি করে ডাউনলোডের লজিক (যা ERR_FILE_NOT_FOUND সমাধান করবে)
-                const blobUrl = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                
-                link.href = blobUrl;
-                link.download = filename; 
+            // ৫. PWA-র জন্য নিরাপদ Base64 ডাটা তৈরি (Blob এর বদলে সরাসরি toDataURL)
+            const base64Data = canvas.toDataURL('image/png');
+            
+            // ৬. ডাউনলোডের জন্য নতুন ও নিরাপদ নিয়ম (ERR_FILE_NOT_FOUND দূর করার জন্য)
+            const link = document.createElement('a');
+            link.style.display = 'none';
+            link.href = base64Data;
+            link.setAttribute('download', filename);
+            
+            // মোবাইল ব্রাউজারকে বাধ্য করা ফাইলটি ডাউনলোড করতে
+            if (typeof link.download === 'undefined') {
+                // যদি সাধারণ ডাউনলোডে কাজ না হয়, তবে নতুন ট্যাবে ওপেন হবে
+                window.open(base64Data, '_blank');
+            } else {
                 document.body.appendChild(link);
                 link.click();
-                
                 document.body.removeChild(link);
-                URL.revokeObjectURL(blobUrl);
+            }
 
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }, 'image/png');
+            // বাটন আগের অবস্থায় ফিরিয়ে আনা
+            btn.innerHTML = originalText;
+            btn.disabled = false;
 
         }).catch(err => {
             console.error("Screenshot error:", err);
@@ -1841,6 +1840,7 @@ function takeQuestionScreenshot() {
         });
     });
 }
+
 
 // ==========================================
 // 🚀 বাটন ক্লিক ইভেন্ট লিসেনার যুক্ত করা
