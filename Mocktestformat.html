@@ -1742,12 +1742,11 @@
 
 // ==========================================
 // 📸 এখানে আপনার নতুন স্ক্রিনশট ফাংশনটি বসান
-// ==========================================
-function takeQuestionScreenshot() {
+// function takeQuestionScreenshot() {
     // প্রশ্ন, ইমেজ এবং অপশন সহ মূল স্ক্রোলিং এরিয়াটি সিলেক্ট করা
     const element = document.getElementById('swipe-area'); 
     const btn = document.getElementById('screenshot-btn');
-    if (!btn) return;
+    if (!btn || !element) return;
     
     const originalText = btn.innerHTML;
     btn.innerHTML = "⏳ Saving...";
@@ -1790,10 +1789,10 @@ function takeQuestionScreenshot() {
 
         html2canvas(element, {
             backgroundColor: "#1f2124", 
-            scale: 2.0, // মেমোরি ওভারফ্লো এড়াতে এবং স্পিড বাড়াতে scale ২.০ করা হলো (এটিও Super HD)
+            scale: 2.0, 
             logging: false,
             useCORS: true,
-            allowTaint: false, // এক্সটার্নাল ইমেজের সিকিউরিটি ফিক্স
+            allowTaint: false, 
             width: element.offsetWidth,
             height: element.scrollHeight,
             windowWidth: element.offsetWidth,
@@ -1803,32 +1802,44 @@ function takeQuestionScreenshot() {
             scrollX: 0,
             scrollY: 0
         }).then(canvas => {
-            // ৪. স্ক্রিনশট নেওয়া শেষে এলিমেন্টের স্টাইল আগের মতো করে দেওয়া
+            // ৪. এলিমেন্টের স্টাইল আগের মতো করে দেওয়া
             element.style.height = originalHeight;
             element.style.overflowY = originalOverflow;
 
-            // ৫. PWA-র জন্য নিরাপদ Base64 ডাটা তৈরি (Blob এর বদলে সরাসরি toDataURL)
-            const base64Data = canvas.toDataURL('image/png');
-            
-            // ৬. ডাউনলোডের জন্য নতুন ও নিরাপদ নিয়ম (ERR_FILE_NOT_FOUND দূর করার জন্য)
-            const link = document.createElement('a');
-            link.style.display = 'none';
-            link.href = base64Data;
-            link.setAttribute('download', filename);
-            
-            // মোবাইল ব্রাউজারকে বাধ্য করা ফাইলটি ডাউনলোড করতে
-            if (typeof link.download === 'undefined') {
-                // যদি সাধারণ ডাউনলোডে কাজ না হয়, তবে নতুন ট্যাবে ওপেন হবে
-                window.open(base64Data, '_blank');
-            } else {
+            // ৫. PWA-র জন্য নিরাপদ Blob Data তৈরি
+            canvas.toBlob(function(blob) {
+                if (!blob) {
+                    alert("স্ক্রিনশট তৈরি করা যায়নি!");
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+                
+                // Blob URL তৈরি করা
+                const blobUrl = URL.createObjectURL(blob);
+                
+                // ডাউনলোডের জন্য ট্যাগ তৈরি
+                const link = document.createElement('a');
+                link.style.display = 'none';
+                link.href = blobUrl;
+                link.download = filename; 
+                
+                // বডিতে যুক্ত করে ক্লিক ইভেন্ট ট্রিগার করা
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-            }
 
-            // বাটন আগের অবস্থায় ফিরিয়ে আনা
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+                // ৬. সবচেয়ে গুরুত্বপূর্ণ সমাধান: (ERR_FILE_NOT_FOUND দূর করতে)
+                // ৩ সেকেন্ড পর URL রিমুভ করা, যাতে ডাউনলোড ম্যানেজার ফাইলটি ধরার সময় পায়
+                setTimeout(() => {
+                    URL.revokeObjectURL(blobUrl);
+                }, 3000);
+
+                // বাটন আগের অবস্থায় ফিরিয়ে আনা
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+            }, 'image/png');
 
         }).catch(err => {
             console.error("Screenshot error:", err);
