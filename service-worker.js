@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wb-mocktest-v3';
+const CACHE_NAME = 'wb-mocktest-v4';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

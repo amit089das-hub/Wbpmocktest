@@ -1740,7 +1740,10 @@
 
 // screenshort এই খানের থেকে শুরু
 
- function takeQuestionScreenshot() {
+// ==========================================
+// 📸 এখানে আপনার নতুন স্ক্রিনশট ফাংশনটি বসান
+// ==========================================
+function takeQuestionScreenshot() {
     // প্রশ্ন, ইমেজ এবং অপশন সহ মূল স্ক্রোলিং এরিয়াটি সিলেক্ট করা
     const element = document.getElementById('swipe-area'); 
     const btn = document.getElementById('screenshot-btn');
@@ -1750,27 +1753,20 @@
     btn.innerHTML = "⏳ Saving...";
     btn.disabled = true;
 
-    // ১. মকটেস্টের নাম, সাবজেক্টের নাম এবং প্রশ্ন নম্বর ডাইনামিকালি খুঁজে বের করা
-    // ক) Mocktest এর নাম (টাইটেল) সংগ্রহ
+    // ১. ডাইনামিক ফাইলের নাম তৈরি করা
     let examTitle = "MockTest";
     const titleEl = document.getElementById("inst-test-name");
     if (titleEl && titleEl.innerText.trim()) {
-        examTitle = titleEl.innerText.trim().replace(/\s+/g, '_'); // স্পেসগুলো (_) দিয়ে পরিবর্তন করা হলো
+        examTitle = titleEl.innerText.trim().replace(/\s+/g, '_'); 
     }
 
-    // খ) সাবজেক্ট এর নাম সংগ্রহ
     let subjectName = "GK";
     const subjectEl = document.getElementById("review-subject-badge");
     if (subjectEl && subjectEl.innerText.trim()) {
         subjectName = subjectEl.innerText.trim().replace(/\s+/g, '_');
     }
 
-    // গ) প্রশ্নের নম্বর (Mocktest বা Question Number) সংগ্রহ 
-    // (currentIndex ০ থেকে শুরু হয় বলে বাস্তব নম্বর দেখাতে ১ যোগ করা হয়েছে)
-    let qNumber = "Q_" + (currentIndex + 1);
-
-    // ঘ) আপনার রিকোয়েস্ট অনুযায়ী সম্পূর্ণ ডাইনামিক ফাইলের নাম তৈরি 
-    // (যেমন: WB_Police_GK_Mock_Test_History_Q_5.png)
+    let qNumber = "Q_" + (typeof currentIndex !== 'undefined' ? (currentIndex + 1) : '1');
     const filename = `${examTitle}_${subjectName}_${qNumber}.png`;
 
     // ২. ছবির ভেতরের ইমেজগুলো পুরোপুরি লোড হওয়া নিশ্চিত করা
@@ -1786,7 +1782,6 @@
 
     Promise.all(imagePromises).then(() => {
         // ৩. স্ক্রিনশট নেওয়ার ঠিক আগের মুহূর্তে ব্যাকগ্রাউন্ডে এরিয়াটির স্ক্রোলিং ও হাইট ফিক্স করা
-        // যাতে ব্রাউজার পুরো ভেতরের অংশটি দেখতে পায় এবং ছবি না কাটে
         const originalHeight = element.style.height;
         const originalOverflow = element.style.overflowY;
         
@@ -1794,12 +1789,11 @@
         element.style.overflowY = 'visible';
 
         html2canvas(element, {
-            backgroundColor: "#1f2124", // আপনার অ্যাপের অরিজিনাল ডার্ক ব্যাকগ্রাউন্ড কালার
-            scale: 2.5, // জুম করলেও যেন লেখা বা ছবি ফেটে না যায় (Super HD)
+            backgroundColor: "#1f2124", 
+            scale: 2.5, 
             logging: false,
             useCORS: true,
-            allowTaint: true,
-            // অতিরিক্ত মার্জিন বা প্যাডিংয়ের কারণে কেটে যাওয়া রোধ করতে
+            allowTaint: false, // ERR_FILE_NOT_FOUND এরর এড়াতে এটি false রাখাই নিরাপদ
             width: element.offsetWidth,
             height: element.scrollHeight,
             windowWidth: element.offsetWidth,
@@ -1821,11 +1815,12 @@
                     return;
                 }
                 
+                // Blob URL তৈরি করে ডাউনলোডের লজিক (যা ERR_FILE_NOT_FOUND সমাধান করবে)
                 const blobUrl = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 
                 link.href = blobUrl;
-                link.download = filename; // ডাইনামিক ফাইলের নাম এখানে সেট হলো
+                link.download = filename; 
                 document.body.appendChild(link);
                 link.click();
                 
@@ -1838,7 +1833,6 @@
 
         }).catch(err => {
             console.error("Screenshot error:", err);
-            // ভুল হলেও যেন স্টাইল আগের মতো ফিরে আসে
             element.style.height = originalHeight;
             element.style.overflowY = originalOverflow;
             btn.innerHTML = originalText;
@@ -1847,6 +1841,20 @@
         });
     });
 }
+
+// ==========================================
+// 🚀 বাটন ক্লিক ইভেন্ট লিসেনার যুক্ত করা
+// ==========================================
+// পেজ লোড হলে পুরো সিস্টেম চালু করার যে ইভেন্ট আপনার ফাইলে আছে, তার ভেতরে এটি যুক্ত করুন
+document.addEventListener("DOMContentLoaded", () => {
+    // আপনার আগের সব init বা লোড ফাংশন এখানে থাকবে (যেমন: initScratchpad();)
+    
+    // স্ক্রিনশট বাটনে ফাংশনটি যুক্ত করা হচ্ছে
+    const screenshotBtn = document.getElementById('screenshot-btn');
+    if (screenshotBtn) {
+        screenshotBtn.addEventListener('click', takeQuestionScreenshot);
+    }
+});
 
 // এই খানে আঙুল দিয়ে লেখার বাটন এর জাভাস্ক্রিপ্ট কোড দেওয়া
 
