@@ -1740,20 +1740,18 @@
 
 // screenshort এই খানের থেকে শুরু
 
-// ==========================================
-// 📸 এখানে আপনার নতুন স্ক্রিনশট ফাংশনটি বসান
-// ==========================================
-function takeQuestionScreenshot() {
-    // প্রশ্ন, ইমেজ এবং অপশন সহ মূল স্ক্রোলিং এরিয়াটি সিলেক্ট করা
+ function takeQuestionScreenshot() {
+    // ১. প্রশ্ন, ইমেজ এবং অপশন সহ মূল স্ক্রোলিং এরিয়াটি সিলেক্ট করা
     const element = document.getElementById('swipe-area'); 
     const btn = document.getElementById('screenshot-btn');
     if (!btn || !element) return;
     
+    // বাটনের টেক্সট পরিবর্তন করে ইউজারকে বোঝানো যে কাজ চলছে
     const originalText = btn.innerHTML;
     btn.innerHTML = "⏳ Saving...";
     btn.disabled = true;
 
-    // ১. ডাইনামিক ফাইলের নাম তৈরি করা
+    // ২. ডাইনামিক ফাইলের নাম তৈরি করা (Exam_Subject_Q_1.png)
     let examTitle = "MockTest";
     const titleEl = document.getElementById("inst-test-name");
     if (titleEl && titleEl.innerText.trim()) {
@@ -1769,7 +1767,7 @@ function takeQuestionScreenshot() {
     let qNumber = "Q_" + (typeof currentIndex !== 'undefined' ? (currentIndex + 1) : '1');
     const filename = `${examTitle}_${subjectName}_${qNumber}.png`;
 
-    // ২. ছবির ভেতরের ইমেজগুলো পুরোপুরি লোড হওয়া নিশ্চিত করা
+    // ৩. ছবির ভেতরের ইমেজগুলো পুরোপুরি লোড হওয়া নিশ্চিত করা
     const images = element.getElementsByTagName('img');
     const imagePromises = [];
     for (let img of images) {
@@ -1780,17 +1778,19 @@ function takeQuestionScreenshot() {
         }
     }
 
+    // ৪. সব ছবি লোড হলে স্ক্রিনশট নেওয়ার প্রসেস শুরু করা
     Promise.all(imagePromises).then(() => {
-        // ৩. স্ক্রিনশট নেওয়ার ঠিক আগের মুহূর্তে ব্যাকগ্রাউন্ডে এরিয়াটির স্ক্রোলিং ও হাইট ফিক্স করা
+        // স্ক্রিনশট নেওয়ার ঠিক আগের মুহূর্তে ব্যাকগ্রাউন্ডে এরিয়াটির স্ক্রোলিং ও হাইট ফিক্স করা
         const originalHeight = element.style.height;
         const originalOverflow = element.style.overflowY;
         
         element.style.height = 'auto';
         element.style.overflowY = 'visible';
 
+        // html2canvas দিয়ে ছবি রেন্ডার করা
         html2canvas(element, {
             backgroundColor: "#1f2124", 
-            scale: 2.0, 
+            scale: 2.0, // ছবির কোয়ালিটি ভালো করার জন্য
             logging: false,
             useCORS: true,
             allowTaint: false, 
@@ -1803,11 +1803,11 @@ function takeQuestionScreenshot() {
             scrollX: 0,
             scrollY: 0
         }).then(canvas => {
-            // ৪. এলিমেন্টের স্টাইল আগের মতো করে দেওয়া
+            // এলিমেন্টের স্টাইল আগের মতো করে দেওয়া
             element.style.height = originalHeight;
             element.style.overflowY = originalOverflow;
 
-            // ৫. PWA-র জন্য নিরাপদ Blob Data তৈরি
+            // ৫. PWA, Vercel এবং আধুনিক ব্রাউজারের জন্য Blob (Binary Data) তৈরি করা
             canvas.toBlob(function(blob) {
                 if (!blob) {
                     alert("স্ক্রিনশট তৈরি করা যায়নি!");
@@ -1816,33 +1816,31 @@ function takeQuestionScreenshot() {
                     return;
                 }
                 
-                // Blob URL তৈরি করা
-                const blobUrl = URL.createObjectURL(blob);
+                // Blob থেকে নিরাপদ লোকাল URL তৈরি করা (এটি Security Error দেবে না)
+                const blobUrl = window.URL.createObjectURL(blob);
                 
-                // ডাউনলোডের জন্য ট্যাগ তৈরি
+                // ডাউনলোডের জন্য ভার্চুয়াল অ্যাঙ্কর <a> ট্যাগ তৈরি
                 const link = document.createElement('a');
                 link.style.display = 'none';
                 link.href = blobUrl;
                 link.download = filename; 
                 
-                // বডিতে যুক্ত করে ক্লিক ইভেন্ট ট্রিগার করা
+                // বডিতে যুক্ত করে অটোমেটিক ক্লিক ইভেন্ট ট্রিগার করা
                 document.body.appendChild(link);
                 link.click();
-                document.body.removeChild(link);
 
-                // ৬. সবচেয়ে গুরুত্বপূর্ণ সমাধান: (ERR_FILE_NOT_FOUND দূর করতে)
-                // ৩ সেকেন্ড পর URL রিমুভ করা, যাতে ডাউনলোড ম্যানেজার ফাইলটি ধরার সময় পায়
+                // ৬. মোবাইলে (PWA) ফাইলটি ডাউনলোড শুরু হওয়ার জন্য একটু সময় দেওয়া (২ সেকেন্ড)
                 setTimeout(() => {
-                    URL.revokeObjectURL(blobUrl);
-                }, 3000);
-
-                // বাটন আগের অবস্থায় ফিরিয়ে আনা
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+                    document.body.removeChild(link); // ট্যাগ রিমুভ করা
+                    window.URL.revokeObjectURL(blobUrl); // মেমোরি ক্লিয়ার করা
+                    btn.innerHTML = originalText; // বাটন আগের অবস্থায় ফিরিয়ে আনা
+                    btn.disabled = false;
+                }, 2000);
 
             }, 'image/png');
 
         }).catch(err => {
+            // কোনো এরর হলে আগের অবস্থায় ফিরিয়ে আনা
             console.error("Screenshot error:", err);
             element.style.height = originalHeight;
             element.style.overflowY = originalOverflow;
@@ -1854,20 +1852,6 @@ function takeQuestionScreenshot() {
 }
 
 
-
-// ==========================================
-// 🚀 বাটন ক্লিক ইভেন্ট লিসেনার যুক্ত করা
-// ==========================================
-// পেজ লোড হলে পুরো সিস্টেম চালু করার যে ইভেন্ট আপনার ফাইলে আছে, তার ভেতরে এটি যুক্ত করুন
-document.addEventListener("DOMContentLoaded", () => {
-    // আপনার আগের সব init বা লোড ফাংশন এখানে থাকবে (যেমন: initScratchpad();)
-    
-    // স্ক্রিনশট বাটনে ফাংশনটি যুক্ত করা হচ্ছে
-    const screenshotBtn = document.getElementById('screenshot-btn');
-    if (screenshotBtn) {
-        screenshotBtn.addEventListener('click', takeQuestionScreenshot);
-    }
-});
 
 // এই খানে আঙুল দিয়ে লেখার বাটন এর জাভাস্ক্রিপ্ট কোড দেওয়া
 
