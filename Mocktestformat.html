@@ -1741,17 +1741,15 @@
 // screenshort এই খানের থেকে শুরু
 
  function takeQuestionScreenshot() {
-    // ১. প্রশ্ন, ইমেজ এবং অপশন সহ মূল স্ক্রোলিং এরিয়াটি সিলেক্ট করা
     const element = document.getElementById('swipe-area'); 
     const btn = document.getElementById('screenshot-btn');
     if (!btn || !element) return;
     
-    // বাটনের টেক্সট পরিবর্তন করে ইউজারকে বোঝানো যে কাজ চলছে
     const originalText = btn.innerHTML;
     btn.innerHTML = "⏳ Saving...";
     btn.disabled = true;
 
-    // ২. ডাইনামিক ফাইলের নাম তৈরি করা (Exam_Subject_Q_1.png)
+    // ফাইলের নাম তৈরি করা
     let examTitle = "MockTest";
     const titleEl = document.getElementById("inst-test-name");
     if (titleEl && titleEl.innerText.trim()) {
@@ -1767,7 +1765,6 @@
     let qNumber = "Q_" + (typeof currentIndex !== 'undefined' ? (currentIndex + 1) : '1');
     const filename = `${examTitle}_${subjectName}_${qNumber}.png`;
 
-    // ৩. ছবির ভেতরের ইমেজগুলো পুরোপুরি লোড হওয়া নিশ্চিত করা
     const images = element.getElementsByTagName('img');
     const imagePromises = [];
     for (let img of images) {
@@ -1778,19 +1775,16 @@
         }
     }
 
-    // ৪. সব ছবি লোড হলে স্ক্রিনশট নেওয়ার প্রসেস শুরু করা
     Promise.all(imagePromises).then(() => {
-        // স্ক্রিনশট নেওয়ার ঠিক আগের মুহূর্তে ব্যাকগ্রাউন্ডে এরিয়াটির স্ক্রোলিং ও হাইট ফিক্স করা
         const originalHeight = element.style.height;
         const originalOverflow = element.style.overflowY;
         
         element.style.height = 'auto';
         element.style.overflowY = 'visible';
 
-        // html2canvas দিয়ে ছবি রেন্ডার করা
         html2canvas(element, {
             backgroundColor: "#1f2124", 
-            scale: 2.0, // ছবির কোয়ালিটি ভালো করার জন্য
+            scale: 2.0, 
             logging: false,
             useCORS: true,
             allowTaint: false, 
@@ -1803,11 +1797,9 @@
             scrollX: 0,
             scrollY: 0
         }).then(canvas => {
-            // এলিমেন্টের স্টাইল আগের মতো করে দেওয়া
             element.style.height = originalHeight;
             element.style.overflowY = originalOverflow;
 
-            // ৫. PWA, Vercel এবং আধুনিক ব্রাউজারের জন্য Blob (Binary Data) তৈরি করা
             canvas.toBlob(function(blob) {
                 if (!blob) {
                     alert("স্ক্রিনশট তৈরি করা যায়নি!");
@@ -1816,31 +1808,47 @@
                     return;
                 }
                 
-                // Blob থেকে নিরাপদ লোকাল URL তৈরি করা (এটি Security Error দেবে না)
-                const blobUrl = window.URL.createObjectURL(blob);
-                
-                // ডাউনলোডের জন্য ভার্চুয়াল অ্যাঙ্কর <a> ট্যাগ তৈরি
-                const link = document.createElement('a');
-                link.style.display = 'none';
-                link.href = blobUrl;
-                link.download = filename; 
-                
-                // বডিতে যুক্ত করে অটোমেটিক ক্লিক ইভেন্ট ট্রিগার করা
-                document.body.appendChild(link);
-                link.click();
+                // ১. Blob কে একটি File অবজেক্টে রূপান্তর করা
+                const file = new File([blob], filename, { type: 'image/png' });
 
-                // ৬. মোবাইলে (PWA) ফাইলটি ডাউনলোড শুরু হওয়ার জন্য একটু সময় দেওয়া (২ সেকেন্ড)
-                setTimeout(() => {
-                    document.body.removeChild(link); // ট্যাগ রিমুভ করা
-                    window.URL.revokeObjectURL(blobUrl); // মেমোরি ক্লিয়ার করা
-                    btn.innerHTML = originalText; // বাটন আগের অবস্থায় ফিরিয়ে আনা
-                    btn.disabled = false;
-                }, 2000);
+                // ২. মোবাইলের Web Share API সাপোর্ট করে কি না চেক করা
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    // সাপোর্ট করলে মোবাইলের নিজস্ব Share/Save মেনু ওপেন হবে
+                    navigator.share({
+                        files: [file],
+                        title: 'Question Screenshot',
+                        text: 'Question Screenshot from Mock Test'
+                    }).then(() => {
+                        // কাজ শেষ হলে বাটন আগের অবস্থায় ফিরিয়ে আনা
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }).catch(err => {
+                        console.log("Share cancelled or failed:", err);
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    });
+                } else {
+                    // ৩. যদি ডেস্কটপ বা এমন ব্রাউজার হয় যা Share সাপোর্ট করে না, তখন সাধারণ ডাউনলোড হবে
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.style.display = 'none';
+                    link.href = blobUrl;
+                    link.download = filename; 
+                    
+                    document.body.appendChild(link);
+                    link.click();
+
+                    setTimeout(() => {
+                        document.body.removeChild(link);
+                        window.URL.revokeObjectURL(blobUrl);
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }, 2000);
+                }
 
             }, 'image/png');
 
         }).catch(err => {
-            // কোনো এরর হলে আগের অবস্থায় ফিরিয়ে আনা
             console.error("Screenshot error:", err);
             element.style.height = originalHeight;
             element.style.overflowY = originalOverflow;
@@ -1850,6 +1858,7 @@
         });
     });
 }
+
 
 
 
