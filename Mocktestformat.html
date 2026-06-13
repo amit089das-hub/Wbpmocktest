@@ -1749,7 +1749,7 @@
     btn.innerHTML = "⏳ Saving...";
     btn.disabled = true;
 
-    // ১. আপনার আগের নিয়মে ফাইলের নাম তৈরি করা
+    // ১. ফাইলের নাম তৈরি করা (আগের মতোই থাকবে)
     let examTitle = "MockTest";
     const titleEl = document.getElementById("inst-test-name");
     if (titleEl && titleEl.innerText.trim()) {
@@ -1800,6 +1800,7 @@
             element.style.height = originalHeight;
             element.style.overflowY = originalOverflow;
 
+            // ২. অরিজিনাল image/png তেই Blob তৈরি করা
             canvas.toBlob(function(blob) {
                 if (!blob) {
                     alert("স্ক্রিনশট তৈরি করা যায়নি!");
@@ -1808,29 +1809,35 @@
                     return;
                 }
                 
-                // ২. ম্যাজিক ট্রিক: ফাইলের টাইপ 'application/octet-stream' করে দেওয়া
-                // এটি ব্রাউজারকে নির্দেশ দেয় যে এই ফাইলটি ওপেন করার জন্য নয়, শুধুমাত্র ডাউনলোডের জন্য।
-                const forceDownloadBlob = new Blob([blob], { type: 'application/octet-stream' });
-                const blobUrl = window.URL.createObjectURL(forceDownloadBlob);
+                const blobUrl = window.URL.createObjectURL(blob);
                 
-                // ৩. ডাউনলোড লিংক তৈরি এবং ক্লিক
                 const link = document.createElement('a');
                 link.style.display = 'none';
                 link.href = blobUrl;
-                link.download = filename; // আপনার অরিজিনাল ফাইলের নাম এখানে কাজ করবে
+                link.download = filename; 
                 
+                // ৩. ম্যাজিক ট্রিক: নতুন উইন্ডো খোলা বন্ধ করা
+                link.target = '_self'; 
                 document.body.appendChild(link);
-                link.click();
 
-                // ৪. মেমোরি ক্লিয়ার করা ও বাটন রিসেট
+                // ৪. সাধারণ click() এর বদলে MouseEvent ফায়ার করা
+                // এটি মোবাইল ব্রাউজারকে বোঝায় যে এটি ইউজারের সরাসরি অ্যাকশন, তাই নতুন পেজ খোলে না।
+                const clickEvent = new MouseEvent('click', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true
+                });
+                link.dispatchEvent(clickEvent);
+
+                // ৫. সাথে সাথেই মেমোরি ক্লিয়ার করা যাতে ব্রাউজার হ্যাং না করে
                 setTimeout(() => {
                     document.body.removeChild(link);
                     window.URL.revokeObjectURL(blobUrl);
                     btn.innerHTML = originalText;
                     btn.disabled = false;
-                }, 2000);
+                }, 100);
 
-            }, 'image/png'); // ক্যানভাস থেকে অরিজিনাল PNG তেই বের হবে
+            }, 'image/png'); // এখানে image/png থাকার কারণে গ্যালারিতে ঠিকঠাক সেভ হবে
 
         }).catch(err => {
             console.error("Screenshot error:", err);
@@ -1842,6 +1849,7 @@
         });
     });
 }
+
 
 
 
