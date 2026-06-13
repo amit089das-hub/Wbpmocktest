@@ -1749,7 +1749,7 @@
     btn.innerHTML = "⏳ Saving...";
     btn.disabled = true;
 
-    // ফাইলের নাম তৈরি করা
+    // ১. আপনার আগের নিয়মে ফাইলের নাম তৈরি করা
     let examTitle = "MockTest";
     const titleEl = document.getElementById("inst-test-name");
     if (titleEl && titleEl.innerText.trim()) {
@@ -1808,45 +1808,29 @@
                     return;
                 }
                 
-                // ১. Blob কে একটি File অবজেক্টে রূপান্তর করা
-                const file = new File([blob], filename, { type: 'image/png' });
+                // ২. ম্যাজিক ট্রিক: ফাইলের টাইপ 'application/octet-stream' করে দেওয়া
+                // এটি ব্রাউজারকে নির্দেশ দেয় যে এই ফাইলটি ওপেন করার জন্য নয়, শুধুমাত্র ডাউনলোডের জন্য।
+                const forceDownloadBlob = new Blob([blob], { type: 'application/octet-stream' });
+                const blobUrl = window.URL.createObjectURL(forceDownloadBlob);
+                
+                // ৩. ডাউনলোড লিংক তৈরি এবং ক্লিক
+                const link = document.createElement('a');
+                link.style.display = 'none';
+                link.href = blobUrl;
+                link.download = filename; // আপনার অরিজিনাল ফাইলের নাম এখানে কাজ করবে
+                
+                document.body.appendChild(link);
+                link.click();
 
-                // ২. মোবাইলের Web Share API সাপোর্ট করে কি না চেক করা
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    // সাপোর্ট করলে মোবাইলের নিজস্ব Share/Save মেনু ওপেন হবে
-                    navigator.share({
-                        files: [file],
-                        title: 'Question Screenshot',
-                        text: 'Question Screenshot from Mock Test'
-                    }).then(() => {
-                        // কাজ শেষ হলে বাটন আগের অবস্থায় ফিরিয়ে আনা
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
-                    }).catch(err => {
-                        console.log("Share cancelled or failed:", err);
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
-                    });
-                } else {
-                    // ৩. যদি ডেস্কটপ বা এমন ব্রাউজার হয় যা Share সাপোর্ট করে না, তখন সাধারণ ডাউনলোড হবে
-                    const blobUrl = window.URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.style.display = 'none';
-                    link.href = blobUrl;
-                    link.download = filename; 
-                    
-                    document.body.appendChild(link);
-                    link.click();
+                // ৪. মেমোরি ক্লিয়ার করা ও বাটন রিসেট
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(blobUrl);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 2000);
 
-                    setTimeout(() => {
-                        document.body.removeChild(link);
-                        window.URL.revokeObjectURL(blobUrl);
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
-                    }, 2000);
-                }
-
-            }, 'image/png');
+            }, 'image/png'); // ক্যানভাস থেকে অরিজিনাল PNG তেই বের হবে
 
         }).catch(err => {
             console.error("Screenshot error:", err);
@@ -1858,6 +1842,7 @@
         });
     });
 }
+
 
 
 
